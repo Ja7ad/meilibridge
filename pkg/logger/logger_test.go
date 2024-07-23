@@ -63,14 +63,13 @@ func TestLogger(t *testing.T) {
 			tt.options.CustomJsonHandler = slog.NewJSONHandler(&buf, nil)
 
 			logger := New(tt.handler, tt.options)
+			assert.NotNil(t, logger)
 
-			// Test method without context
 			tt.method(logger, tt.expectedMsg)
 			assert.Contains(t, buf.String(), tt.expectedMsg)
 
 			buf.Reset()
 
-			// Test method with context
 			ctx := context.Background()
 			tt.methodCtx(logger, ctx, tt.expectedMsg)
 			assert.Contains(t, buf.String(), tt.expectedMsg)

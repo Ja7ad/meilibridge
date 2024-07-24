@@ -15,7 +15,7 @@ bridges:
   - collection: "user"
     # index name for meilisearch
     index_name: "user"
-    # primary_keys set pk for fields in meilisearch
+    # primary_keys set pk for fields in meilisearch, note if set value for fields please enter value not database key
     primary_keys:
       - id
       - age

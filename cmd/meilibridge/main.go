@@ -1,8 +1,8 @@
 package main
 
 import (
+	"github.com/Ja7ad/meilibridge/pkg/logger"
 	"github.com/spf13/cobra"
-	"log"
 )
 
 func main() {
@@ -14,11 +14,15 @@ func main() {
 		CompletionOptions: cobra.CompletionOptions{HiddenDefaultCmd: true},
 	}
 
-	buildSync(root)
-	buildBulk(root)
+	cfgPath := root.Flags().StringP("config", "c", "./config.yml", "path to config file")
+
+	log := logger.DefaultLogger
+
+	root.AddCommand(buildSync(log, *cfgPath))
+	root.AddCommand(buildBulk(log, *cfgPath))
 
 	err := root.Execute()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 }

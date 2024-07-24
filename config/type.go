@@ -1,4 +1,4 @@
-package cfg
+package config
 
 type Config struct {
 	Meilisearch *Meilisearch `yaml:"meilisearch"`

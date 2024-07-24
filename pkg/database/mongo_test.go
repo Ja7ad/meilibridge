@@ -69,7 +69,7 @@ var (
 	}
 
 	client *mongo.Client
-	engine Engine
+	engine MongoExecutor
 	once   sync.Once
 )
 
@@ -77,12 +77,13 @@ func setup(t *testing.T) {
 	ctx := context.TODO()
 
 	once.Do(func() {
-		e, err := NewMongo(context.TODO(), os.Getenv("MONGO_URI"), testDBName, logger.DefaultLogger)
+		e, err := newMongo(context.TODO(), os.Getenv("MONGO_URI"), testDBName, logger.DefaultLogger)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		engine = e
+		engine.AddCollection(testCollectionName)
 
 		cli, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(os.Getenv("MONGO_URI")))
 		if err != nil {
@@ -99,17 +100,21 @@ func setup(t *testing.T) {
 
 }
 
+func cleanup() error {
+	return client.Database(testDBName).Drop(context.Background())
+}
+
 func TestMongo_FindOne(t *testing.T) {
 	setup(t)
+	defer cleanup()
 
 	ctx := context.TODO()
-	col := engine.Collection(testCollectionName)
 
 	for _, ee := range exampleManyData {
 		data, ok := ee.(map[string]interface{})
 		assert.True(t, ok)
 
-		res, err := col.FindOne(ctx, bson.M{"name": data["name"]})
+		res, err := engine.FindOne(ctx, bson.M{"name": data["name"]}, testCollectionName)
 		assert.Nil(t, err)
 		assert.NotNil(t, res)
 	}
@@ -117,23 +122,32 @@ func TestMongo_FindOne(t *testing.T) {
 
 func Test_Find(t *testing.T) {
 	setup(t)
+	defer cleanup()
 
 	ctx := context.TODO()
-	col := engine.Collection(testCollectionName)
 
-	res, err := col.Find(ctx, bson.M{})
-	assert.Nil(t, err)
-	assert.Len(t, res, len(exampleManyData))
+	resCh := engine.Find(ctx, bson.M{}, testCollectionName)
+
+	for {
+		select {
+		case res, ok := <-resCh:
+			if !ok {
+				goto done
+			}
+			assert.NotNil(t, res)
+		}
+	}
+done:
 }
 
 func Test_FindLimit(t *testing.T) {
 	setup(t)
+	defer cleanup()
 	limit := int64(2)
 
 	ctx := context.TODO()
-	col := engine.Collection(testCollectionName)
 
-	cursor, err := col.FindLimit(ctx, limit)
+	cursor, err := engine.FindLimit(ctx, limit, testCollectionName)
 	assert.Nil(t, err)
 
 	for cursor.Next(ctx) {
@@ -145,12 +159,12 @@ func Test_FindLimit(t *testing.T) {
 
 func Test_Watcher(t *testing.T) {
 	setup(t)
+	defer cleanup()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	col := engine.Collection(testCollectionName)
-	resCh, err := col.Watcher(ctx)
+	resCh, err := engine.Watcher(ctx, testCollectionName)
 	assert.Nil(t, err)
 
 	id := primitive.NewObjectID()

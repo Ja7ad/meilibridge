@@ -4,42 +4,27 @@ import (
 	"context"
 	"github.com/Ja7ad/meilibridge/pkg/logger"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"math"
 )
 
 type Mongo struct {
 	cli *mongo.Client
 	log logger.Logger
-	*MongoCollection
-}
-
-type MongoCollection struct {
-	col *mongo.Collection
 	db  *mongo.Database
+
+	collections map[string]*mongo.Collection
 }
 
-type mongoChangeEvent struct {
-	OperationType     string             `bson:"operationType" json:"operationType"`
-	DocumentKey       primitive.ObjectID `bson:"documentKey" json:"documentKey"`
-	FullDocument      Result             `bson:"fullDocument" json:"fullDocument"`
-	UpdateDescription struct {
-		UpdatedFields Result   `bson:"updatedFields" json:"updatedFields"`
-		RemovedFields []string `bson:"removedFields" json:"removedFields"`
-	} `bson:"updateDescription" json:"updateDescription"`
-}
-
-type documentKey struct {
-	ID primitive.ObjectID `bson:"_id"`
-}
-
-func NewMongo(
+func newMongo(
 	ctx context.Context,
 	uri string, database string,
 	log logger.Logger,
-) (Engine, error) {
-	mgo := new(Mongo)
+) (MongoExecutor, error) {
+	mgo := &Mongo{
+		collections: make(map[string]*mongo.Collection),
+	}
 
 	cli, err := mongo.Connect(ctx, options.Client().ApplyURI(uri))
 	if err != nil {
@@ -52,9 +37,7 @@ func NewMongo(
 
 	mgo.cli = cli
 	mgo.log = log
-	mgo.MongoCollection = &MongoCollection{
-		db: cli.Database(database),
-	}
+	mgo.db = cli.Database(database)
 
 	return mgo, nil
 }
@@ -63,42 +46,60 @@ func (m *Mongo) Close() error {
 	return m.cli.Disconnect(context.Background())
 }
 
-func (m *Mongo) Collection(col string) Operation {
-	m.MongoCollection.col = m.db.Collection(col)
-	return m
+func (m *Mongo) AddCollection(col string) {
+	if _, exists := m.collections[col]; !exists {
+		m.collections[col] = m.db.Collection(col)
+	}
 }
 
-func (m *Mongo) Count(ctx context.Context) (int64, error) {
-	return m.col.EstimatedDocumentCount(ctx)
+func (m *Mongo) Count(ctx context.Context, col string) (int64, error) {
+	return m.collections[col].EstimatedDocumentCount(ctx)
 }
 
-func (m *Mongo) FindOne(ctx context.Context, filter interface{}) (Result, error) {
+func (m *Mongo) FindOne(ctx context.Context, filter interface{}, col string) (Result, error) {
 	var res Result
 
-	return res, m.col.FindOne(ctx, filter).Decode(&res)
+	return res, m.collections[col].FindOne(ctx, filter).Decode(&res)
 }
 
-func (m *Mongo) Find(ctx context.Context, filter interface{}) ([]Result, error) {
-	res := make([]Result, 0)
+func (m *Mongo) Find(ctx context.Context, filter interface{}, col string) <-chan Result {
+	resCh := make(chan Result)
 
-	cursor, err := m.col.Find(ctx, filter)
+	go func() {
+		defer close(resCh)
+
+		cursor, err := m.collections[col].Find(ctx, filter)
+		if err != nil {
+			m.log.Fatal(err.Error())
+			return
+		}
+		defer func() {
+			_ = cursor.Close(ctx)
+		}()
+
+		for cursor.Next(ctx) {
+			var res Result
+			if err := cursor.Decode(&res); err != nil {
+				m.log.Fatal(err.Error())
+				return
+			}
+			resCh <- res
+		}
+	}()
+
+	return resCh
+}
+
+func (m *Mongo) FindLimit(ctx context.Context, limit int64, col string) (Cursor, error) {
+	count, err := m.Count(ctx, col)
 	if err != nil {
 		return nil, err
 	}
 
-	return res, cursor.All(ctx, &res)
-}
-
-func (m *Mongo) FindLimit(ctx context.Context, limit int64) (Cursor, error) {
-	count, err := m.Count(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	totalPages := count / limit
+	totalPages := int64(math.Ceil(float64(count) / float64(limit)))
 
 	return &cur{
-		col:   m.col,
+		col:   m.collections[col],
 		limit: limit,
 		pages: totalPages,
 		page:  0,
@@ -108,10 +109,10 @@ func (m *Mongo) FindLimit(ctx context.Context, limit int64) (Cursor, error) {
 	}, nil
 }
 
-func (m *Mongo) Watcher(ctx context.Context) (<-chan func() (wType WatcherType, res WatchResult), error) {
+func (m *Mongo) Watcher(ctx context.Context, col string) (<-chan func() (wType WatcherType, res WatchResult), error) {
 	resCh := make(chan func() (wType WatcherType, res WatchResult))
 
-	cs, err := m.col.Watch(ctx, buildChangeStreamAggregationPipeline())
+	cs, err := m.collections[col].Watch(ctx, buildChangeStreamAggregationPipeline())
 	if err != nil {
 		return nil, err
 	}

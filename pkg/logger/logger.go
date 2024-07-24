@@ -69,7 +69,7 @@ type Logger interface {
 var DefaultLogger = New(CONSOLE_HANDLER, Options{
 	Development:  false,
 	Debug:        false,
-	EnableCaller: true,
+	EnableCaller: false,
 	SkipCaller:   3,
 })
 

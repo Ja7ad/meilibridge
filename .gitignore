@@ -21,8 +21,8 @@
 go.work
 go.work.sum
 
-cfg/*.yml
-cfg/*.yaml
+config.yml
+config.yaml
 
 # IDE
 .idea/

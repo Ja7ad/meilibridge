@@ -14,15 +14,16 @@ func main() {
 		CompletionOptions: cobra.CompletionOptions{HiddenDefaultCmd: true},
 	}
 
-	cfgPath := root.Flags().StringP("config", "c", "./config.yml", "path to config file")
-
 	log := logger.DefaultLogger
 
-	root.AddCommand(buildSync(log, *cfgPath))
-	root.AddCommand(buildBulk(log, *cfgPath))
+	root.AddCommand(buildSync())
 
 	err := root.Execute()
 	if err != nil {
 		log.Fatal(err.Error())
 	}
+}
+
+func globalCfgFlag(cmd *cobra.Command) *string {
+	return cmd.Flags().StringP("config", "c", "./config.yml", "path to config file")
 }

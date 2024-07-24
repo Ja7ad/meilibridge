@@ -13,5 +13,5 @@ var (
 	ErrMissingBridgeConfig      = errors.New("bridge configuration is missing")
 	ErrCollectionRequire        = errors.New("bridge collection is required")
 	ErrIndexNameRequire         = errors.New("bridge index_name is required")
-	ErrMissingBridgeFields      = errors.New("at least one bridge fields is required")
+	ErrInvalidPrimaryKey        = errors.New("don't match primary key with field value map")
 )

@@ -29,15 +29,17 @@ func TestConfig_Validate(t *testing.T) {
 					URI:      "mongodb://localhost:27017",
 					Database: "mydb",
 				},
-				Bridge: &Bridge{
-					Collection: "mycollection",
-					IndexName:  "myindex",
-					PrimaryKeys: []string{
-						"id",
-					},
-					Fields: map[string]string{
-						"foo": "foo",
-						"bar": "",
+				Bridges: []*Bridge{
+					{
+						Collection: "mycollection",
+						IndexName:  "myindex",
+						Fields: map[string]string{
+							"foo": "foo",
+							"bar": "",
+						},
+						Settings: &BridgeSettings{
+							PrimaryKey: "id",
+						},
 					},
 				},
 			},
@@ -52,11 +54,17 @@ func TestConfig_Validate(t *testing.T) {
 					URI:      "mongodb://localhost:27017",
 					Database: "mydb",
 				},
-				Bridge: &Bridge{
-					Collection: "mycollection",
-					IndexName:  "myindex",
-					PrimaryKeys: []string{
-						"id",
+				Bridges: []*Bridge{
+					{
+						Collection: "mycollection",
+						IndexName:  "myindex",
+						Fields: map[string]string{
+							"foo": "foo",
+							"bar": "",
+						},
+						Settings: &BridgeSettings{
+							PrimaryKey: "id",
+						},
 					},
 				},
 			},
@@ -74,11 +82,17 @@ func TestConfig_Validate(t *testing.T) {
 					URI:      "mongodb://localhost:27017",
 					Database: "mydb",
 				},
-				Bridge: &Bridge{
-					Collection: "mycollection",
-					IndexName:  "myindex",
-					PrimaryKeys: []string{
-						"id",
+				Bridges: []*Bridge{
+					{
+						Collection: "mycollection",
+						IndexName:  "myindex",
+						Fields: map[string]string{
+							"foo": "foo",
+							"bar": "",
+						},
+						Settings: &BridgeSettings{
+							PrimaryKey: "id",
+						},
 					},
 				},
 			},
@@ -92,11 +106,17 @@ func TestConfig_Validate(t *testing.T) {
 					APIKey: "masterKey",
 				},
 				Source: nil,
-				Bridge: &Bridge{
-					Collection: "mycollection",
-					IndexName:  "myindex",
-					PrimaryKeys: []string{
-						"id",
+				Bridges: []*Bridge{
+					{
+						Collection: "mycollection",
+						IndexName:  "myindex",
+						Fields: map[string]string{
+							"foo": "foo",
+							"bar": "",
+						},
+						Settings: &BridgeSettings{
+							PrimaryKey: "id",
+						},
 					},
 				},
 			},
@@ -114,11 +134,17 @@ func TestConfig_Validate(t *testing.T) {
 					URI:      "mongodb://localhost:27017",
 					Database: "mydb",
 				},
-				Bridge: &Bridge{
-					Collection: "mycollection",
-					IndexName:  "myindex",
-					PrimaryKeys: []string{
-						"id",
+				Bridges: []*Bridge{
+					{
+						Collection: "mycollection",
+						IndexName:  "myindex",
+						Fields: map[string]string{
+							"foo": "foo",
+							"bar": "",
+						},
+						Settings: &BridgeSettings{
+							PrimaryKey: "id",
+						},
 					},
 				},
 			},
@@ -136,11 +162,17 @@ func TestConfig_Validate(t *testing.T) {
 					URI:      "",
 					Database: "mydb",
 				},
-				Bridge: &Bridge{
-					Collection: "mycollection",
-					IndexName:  "myindex",
-					PrimaryKeys: []string{
-						"id",
+				Bridges: []*Bridge{
+					{
+						Collection: "mycollection",
+						IndexName:  "myindex",
+						Fields: map[string]string{
+							"foo": "foo",
+							"bar": "",
+						},
+						Settings: &BridgeSettings{
+							PrimaryKey: "id",
+						},
 					},
 				},
 			},
@@ -158,11 +190,17 @@ func TestConfig_Validate(t *testing.T) {
 					URI:      "mongodb://localhost:27017",
 					Database: "",
 				},
-				Bridge: &Bridge{
-					Collection: "mycollection",
-					IndexName:  "myindex",
-					PrimaryKeys: []string{
-						"id",
+				Bridges: []*Bridge{
+					{
+						Collection: "mycollection",
+						IndexName:  "myindex",
+						Fields: map[string]string{
+							"foo": "foo",
+							"bar": "",
+						},
+						Settings: &BridgeSettings{
+							PrimaryKey: "id",
+						},
 					},
 				},
 			},
@@ -180,7 +218,7 @@ func TestConfig_Validate(t *testing.T) {
 					URI:      "mongodb://localhost:27017",
 					Database: "mydb",
 				},
-				Bridge: nil,
+				Bridges: nil,
 			},
 			wantError: ErrMissingBridgeConfig,
 		},
@@ -196,11 +234,17 @@ func TestConfig_Validate(t *testing.T) {
 					URI:      "mongodb://localhost:27017",
 					Database: "mydb",
 				},
-				Bridge: &Bridge{
-					Collection: "",
-					IndexName:  "myindex",
-					PrimaryKeys: []string{
-						"id",
+				Bridges: []*Bridge{
+					{
+						Collection: "",
+						IndexName:  "myindex",
+						Fields: map[string]string{
+							"foo": "foo",
+							"bar": "",
+						},
+						Settings: &BridgeSettings{
+							PrimaryKey: "id",
+						},
 					},
 				},
 			},
@@ -218,35 +262,21 @@ func TestConfig_Validate(t *testing.T) {
 					URI:      "mongodb://localhost:27017",
 					Database: "mydb",
 				},
-				Bridge: &Bridge{
-					Collection: "mycollection",
-					IndexName:  "",
-					PrimaryKeys: []string{
-						"id",
+				Bridges: []*Bridge{
+					{
+						Collection: "mycollection",
+						IndexName:  "",
+						Fields: map[string]string{
+							"foo": "foo",
+							"bar": "",
+						},
+						Settings: &BridgeSettings{
+							PrimaryKey: "id",
+						},
 					},
 				},
 			},
 			wantError: ErrIndexNameRequire,
-		},
-		{
-			name: "missing bridge primary keys",
-			config: &Config{
-				Meilisearch: &Meilisearch{
-					APIURL: "http://localhost:7700",
-					APIKey: "masterKey",
-				},
-				Source: &Source{
-					Engine:   "mongo",
-					URI:      "mongodb://localhost:27017",
-					Database: "mydb",
-				},
-				Bridge: &Bridge{
-					Collection:  "mycollection",
-					IndexName:   "myindex",
-					PrimaryKeys: []string{},
-				},
-			},
-			wantError: ErrMissingBridgeFields,
 		},
 	}
 

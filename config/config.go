@@ -33,8 +33,8 @@ func (c *Config) Validate() error {
 	}
 
 	switch c.Source.Engine {
-	case MONGO.String():
-	case MYSQL.String(), POSTGRES.String():
+	case MONGO:
+	case MYSQL, POSTGRES:
 		// TODO: currently not supported mysql and postgres
 		return ErrNotSupportedEngine
 	default:
@@ -48,17 +48,30 @@ func (c *Config) Validate() error {
 		return ErrSourceDatabaseRequire
 	}
 
-	if c.Bridge == nil {
+	if len(c.Bridges) == 0 {
 		return ErrMissingBridgeConfig
 	}
-	if c.Bridge.Collection == "" {
-		return ErrCollectionRequire
-	}
-	if c.Bridge.IndexName == "" {
-		return ErrIndexNameRequire
-	}
-	if len(c.Bridge.Fields) == 0 {
-		return ErrMissingBridgeFields
+
+	for _, bridge := range c.Bridges {
+		if bridge == nil {
+			return ErrMissingBridgeConfig
+		}
+		if bridge.Collection == "" {
+			return ErrCollectionRequire
+		}
+		if bridge.IndexName == "" {
+			return ErrIndexNameRequire
+		}
+		if bridge.Settings != nil && bridge.Fields != nil {
+			pk, ok := bridge.Fields[bridge.Settings.PrimaryKey]
+			if !ok {
+				break
+			}
+
+			if pk != "" && bridge.Settings.PrimaryKey != pk {
+				return ErrInvalidPrimaryKey
+			}
+		}
 	}
 
 	return nil

@@ -1,0 +1,67 @@
+builds:
+  - id: meilibridge
+    main: ./cmd/meilibridge/main.go
+    dir: ./cmd/meilibridge
+    binary: meilibridge
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - windows
+      - darwin
+    goarch:
+      - "386"
+      - amd64
+      - arm
+      - arm64
+    goarm:
+      - "6"
+      - "7"
+    ignore:
+      - goos: linux
+        goarch: arm
+        goarm: "7"
+      - goos: windows
+        goarch: arm
+        goarm: "7"
+      - goos: android
+        goarch: arm
+        goarm: "6"
+      - goos: android
+        goarch: arm
+        goarm: "7"
+      - goos: android
+        goarch: "386"
+
+archives:
+  - builds:
+      - meilibridge
+    name_template: 'meilibridge_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      - LICENSE
+      - config.example.yml
+
+nfpms:
+  - license: MIT
+    maintainer: Javad Rajabzadeh <ja7ad@live.com>
+    homepage: https://meilibridge.javad.dev
+    bindir: /usr/local/bin
+    description: Meilibridge (meilisearch syncer)
+    formats:
+      - deb
+      - rpm
+
+checksum:
+  name_template: 'meilibridge_checksums.txt'
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - Merge pull request
+      - Merge branch

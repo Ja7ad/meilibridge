@@ -25,5 +25,6 @@ func main() {
 }
 
 func globalCfgFlag(cmd *cobra.Command) *string {
-	return cmd.Flags().StringP("config", "c", "./config.yml", "path to config file")
+	return cmd.Flags().StringP("config",
+		"c", "/etc/meilibridge/config.yml", "path to config file")
 }

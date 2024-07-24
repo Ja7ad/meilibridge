@@ -1,6 +1,6 @@
 builds:
   - id: meilibridge
-    main: ./cmd/meilibridge/main.go
+    main: ./main.go
     dir: ./cmd/meilibridge
     binary: meilibridge
     env:

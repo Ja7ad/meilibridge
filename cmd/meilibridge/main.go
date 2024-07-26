@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"github.com/Ja7ad/meilibridge/pkg/logger"
+	"github.com/Ja7ad/meilibridge/version"
 	"github.com/spf13/cobra"
 	"os"
 	"os/signal"
@@ -12,7 +14,7 @@ import (
 func main() {
 	root := &cobra.Command{
 		Use:   "meilibridge",
-		Short: "Meilibridge",
+		Short: fmt.Sprintf("Meilibridge %s", version.Version()),
 		Long: "Meilibridge is a robust package designed to seamlessly sync data from both SQL and NoSQL " +
 			"databases to Meilisearch, providing an efficient and unified search solution.",
 		CompletionOptions: cobra.CompletionOptions{HiddenDefaultCmd: true},

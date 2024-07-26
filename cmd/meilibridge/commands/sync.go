@@ -1,4 +1,4 @@
-package main
+package commands
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func buildSync(log logger.Logger) *cobra.Command {
+func BuildSync(log logger.Logger) *cobra.Command {
 	sync := &cobra.Command{
 		Use:   "sync",
 		Short: "bulk or realtime sync",

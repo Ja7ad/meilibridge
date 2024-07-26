@@ -4,7 +4,7 @@ builds:
     dir: ./cmd/meilibridge
     binary: meilibridge
     env:
-      - CGO_ENABLED=1
+      - CGO_ENABLED=0
     goos:
       - linux
       - windows
@@ -42,6 +42,7 @@ archives:
     files:
       - LICENSE
       - config.example.yml
+      - README.md
 
 nfpms:
   - license: MIT

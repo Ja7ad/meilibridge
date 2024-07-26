@@ -1,14 +1,11 @@
 package main
 
 import (
-	"context"
 	"fmt"
+	"github.com/Ja7ad/meilibridge/cmd/meilibridge/commands"
 	"github.com/Ja7ad/meilibridge/pkg/logger"
 	"github.com/Ja7ad/meilibridge/version"
 	"github.com/spf13/cobra"
-	"os"
-	"os/signal"
-	"syscall"
 )
 
 func main() {
@@ -22,27 +19,11 @@ func main() {
 
 	log := logger.DefaultLogger
 
-	root.AddCommand(buildSync(log))
+	root.AddCommand(commands.BuildSync(log))
+	root.AddCommand(commands.BuildVersion())
 
 	err := root.Execute()
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-}
-
-func globalCfgFlag(cmd *cobra.Command) *string {
-	return cmd.Flags().StringP("config",
-		"c", "/etc/meilibridge/config.yml", "path to config file")
-}
-
-func interruptSignal(ctx context.Context) context.Context {
-	ctx, cancel := context.WithCancel(ctx)
-	interrupt := make(chan os.Signal, 1)
-	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
-
-	go func() {
-		<-interrupt
-		cancel()
-	}()
-	return ctx
 }

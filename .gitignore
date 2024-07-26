@@ -27,3 +27,6 @@ config.yaml
 # IDE
 .idea/
 .vscode/
+
+# build
+dist/

@@ -1,6 +1,17 @@
 meilibridge is a robust package designed to seamlessly sync data from both SQL and NoSQL databases to Meilisearch, 
 providing an efficient and unified search solution.
 
+## Features
+
+- Multiple bridge with different data sources
+- Multiple database (mongo, mysql, postgres)
+- Index configuration
+- Real-time sync 
+- Bulk sync support with continue or reindex
+- concurrent bridge data to meilisearch
+- Customize fields for indexing
+- Set primary key for index
+
 ## Install
 
 you can install or use built.

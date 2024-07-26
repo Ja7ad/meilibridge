@@ -1,23 +1,21 @@
 package main
 
 import (
-	"fmt"
 	"github.com/Ja7ad/meilibridge/config"
 	"github.com/Ja7ad/meilibridge/pkg/bridge"
 	"github.com/Ja7ad/meilibridge/pkg/database"
 	"github.com/Ja7ad/meilibridge/pkg/logger"
 	"github.com/Ja7ad/meilibridge/pkg/meilisearch"
 	"github.com/spf13/cobra"
-	"strings"
 )
 
-func buildSync() *cobra.Command {
+func buildSync(log logger.Logger) *cobra.Command {
 	sync := &cobra.Command{
 		Use:   "sync",
-		Short: "start realtime sync operation",
+		Short: "bulk or realtime sync",
 	}
 
-	sync.AddCommand(buildBulk())
+	sync.AddCommand(buildBulk(log))
 
 	sync.AddCommand(&cobra.Command{
 		Use:   "start",
@@ -31,7 +29,7 @@ func buildSync() *cobra.Command {
 	return sync
 }
 
-func buildBulk() *cobra.Command {
+func buildBulk(log logger.Logger) *cobra.Command {
 	bulk := &cobra.Command{
 		Use:   "bulk",
 		Short: "start bulk sync operation",
@@ -50,17 +48,17 @@ func buildBulk() *cobra.Command {
 			return err
 		}
 
-		log := logger.DefaultLogger
-
-		err = database.AddEngine(
-			cmd.Context(),
-			cfg.Source.Engine,
-			cfg.Source.URI,
-			cfg.Source.Database,
-			log,
-		)
-		if err != nil {
-			return err
+		for _, b := range cfg.Bridges {
+			err = database.AddEngine(
+				cmd.Context(),
+				b.Source.Engine,
+				b.Source.URI,
+				b.Source.Database,
+				log,
+			)
+			if err != nil {
+				return err
+			}
 		}
 
 		meili, err := meilisearch.New(cmd.Context(), cfg.Meilisearch.APIURL, cfg.Meilisearch.APIKey, log)
@@ -68,8 +66,8 @@ func buildBulk() *cobra.Command {
 			return err
 		}
 
-		b := bridge.New(cfg.Bridges, meili, cfg.Source.Engine, log)
-		if err := b.BulkSync(cmd.Context(), progressBar, *con); err != nil {
+		b := bridge.New(cfg.Bridges, meili, log)
+		if err := b.BulkSync(cmd.Context(), *con); err != nil {
 			return err
 		}
 
@@ -77,12 +75,4 @@ func buildBulk() *cobra.Command {
 	}
 
 	return bulk
-}
-
-func progressBar(totalItems, totalIndexedItems int64) {
-	percentage := float64(totalIndexedItems) / float64(totalItems) * 100
-	barLength := 50
-	filledLength := int(float64(barLength) * percentage / 100)
-	bar := strings.Repeat("=", filledLength) + strings.Repeat(" ", barLength-filledLength)
-	fmt.Printf("\r%.0f%% [%s] (%d/%d)", percentage, bar, totalIndexedItems, totalItems)
 }

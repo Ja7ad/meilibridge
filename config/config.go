@@ -28,50 +28,65 @@ func (c *Config) Validate() error {
 		return ErrAPIUrlRequire
 	}
 
-	if c.Source == nil {
-		return ErrMissingSourceConfig
-	}
-
-	switch c.Source.Engine {
-	case MONGO:
-	case MYSQL, POSTGRES:
-		// TODO: currently not supported mysql and postgres
-		return ErrNotSupportedEngine
-	default:
-		return ErrNotSupportedEngine
-	}
-
-	if c.Source.URI == "" {
-		return ErrSourceURIRequire
-	}
-	if c.Source.Database == "" {
-		return ErrSourceDatabaseRequire
-	}
-
-	if len(c.Bridges) == 0 {
+	if c.Bridges == nil {
 		return ErrMissingBridgeConfig
 	}
 
 	for _, bridge := range c.Bridges {
-		if bridge == nil {
-			return ErrMissingBridgeConfig
+		if bridge.IndexMap == nil {
+			return ErrIndexMapRequire
 		}
-		if bridge.Collection == "" {
-			return ErrCollectionRequire
+
+		if bridge.Source == nil {
+			return ErrMissingSourceConfig
 		}
-		if bridge.IndexName == "" {
-			return ErrIndexNameRequire
+
+		if bridge.Source.URI == "" {
+			return ErrSourceURIRequire
 		}
-		if bridge.Settings != nil && bridge.Fields != nil {
-			pk, ok := bridge.Fields[bridge.Settings.PrimaryKey]
-			if !ok {
-				break
+
+		if bridge.Source.Database == "" {
+			return ErrSourceDatabaseRequire
+		}
+
+		switch bridge.Source.Engine {
+		case MONGO:
+		case MYSQL, POSTGRES:
+			// TODO: currently not supported mysql and postgres
+			return ErrNotSupportedEngine
+		default:
+			return ErrNotSupportedEngine
+		}
+
+		for collection, index := range bridge.IndexMap {
+			if collection == "" {
+				return ErrCollectionNameRequire
 			}
 
-			if pk != "" && bridge.Settings.PrimaryKey != pk {
-				return ErrInvalidPrimaryKey
+			if index == nil {
+				return ErrBridgeDestinationRequire
+			}
+
+			if index.IndexName == "" {
+				return ErrIndexNameRequire
+			}
+
+			if index.PrimaryKey == "" {
+				return ErrPrimaryKeyIsRequire
+			}
+
+			if index.Fields != nil {
+				pk, ok := index.Fields[index.PrimaryKey]
+				if !ok {
+					break
+				}
+
+				if pk != "" && index.PrimaryKey != pk {
+					return ErrInvalidPrimaryKey
+				}
 			}
 		}
+
 	}
 
 	return nil

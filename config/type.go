@@ -2,7 +2,6 @@ package config
 
 type Config struct {
 	Meilisearch *Meilisearch `yaml:"meilisearch"`
-	Source      *Source      `yaml:"source"`
 	Bridges     []*Bridge    `yaml:"bridges"`
 }
 
@@ -11,22 +10,23 @@ type Meilisearch struct {
 	APIKey string `yaml:"api_key"`
 }
 
+type Bridge struct {
+	Name     string                      `yaml:"name"`
+	Source   *Source                     `yaml:"source"`
+	IndexMap map[Collection]*Destination `yaml:"index_map"`
+}
+
 type Source struct {
 	Engine   Engine `yaml:"engine"`
 	URI      string `yaml:"uri"`
 	Database string `yaml:"database"`
 }
 
-type Bridge struct {
-	Collection string            `yaml:"collection"`
+type Destination struct {
 	IndexName  string            `yaml:"index_name"`
+	PrimaryKey string            `yaml:"primary_key"`
 	Fields     map[string]string `yaml:"fields"`
-	Settings   *BridgeSettings   `yaml:"settings"`
-}
-
-type BridgeSettings struct {
-	PrimaryKey string    `yaml:"primary_key"`
-	Settings   *Settings `yaml:"index_settings"`
+	Settings   *Settings         `yaml:"settings"`
 }
 
 type Settings struct {
@@ -72,7 +72,11 @@ type Embedder struct {
 	DocumentTemplate string `json:"documentTemplate,omitempty" yaml:"document_template"`
 }
 
-type Engine string
+type (
+	Engine     string
+	Collection string
+	Index      string
+)
 
 const (
 	MONGO    Engine = "mongo"
@@ -80,6 +84,8 @@ const (
 	POSTGRES Engine = "postgres"
 )
 
-func (e Engine) String() string {
-	return string(e)
-}
+func (e Engine) String() string { return string(e) }
+
+func (c Collection) String() string { return string(c) }
+
+func (i Index) String() string { return string(i) }

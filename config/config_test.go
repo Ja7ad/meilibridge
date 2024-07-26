@@ -24,21 +24,27 @@ func TestConfig_Validate(t *testing.T) {
 					APIURL: "http://localhost:7700",
 					APIKey: "masterKey",
 				},
-				Source: &Source{
-					Engine:   "mongo",
-					URI:      "mongodb://localhost:27017",
-					Database: "mydb",
-				},
 				Bridges: []*Bridge{
 					{
-						Collection: "mycollection",
-						IndexName:  "myindex",
-						Fields: map[string]string{
-							"foo": "foo",
-							"bar": "",
+						Name: "bridge1",
+						Source: &Source{
+							Engine:   "mongo",
+							URI:      "mongodb://localhost:27017",
+							Database: "mydb",
 						},
-						Settings: &BridgeSettings{
-							PrimaryKey: "id",
+						IndexMap: map[Collection]*Destination{
+							"col1": {
+								IndexName:  "idx1",
+								PrimaryKey: "id",
+								Fields: map[string]string{
+									"foo": "foo",
+									"bar": "",
+								},
+							},
+							"col2": {
+								IndexName:  "idx1",
+								PrimaryKey: "id",
+							},
 						},
 					},
 				},
@@ -49,21 +55,26 @@ func TestConfig_Validate(t *testing.T) {
 			name: "missing meilisearch",
 			config: &Config{
 				Meilisearch: nil,
-				Source: &Source{
-					Engine:   "mongo",
-					URI:      "mongodb://localhost:27017",
-					Database: "mydb",
-				},
 				Bridges: []*Bridge{
 					{
-						Collection: "mycollection",
-						IndexName:  "myindex",
-						Fields: map[string]string{
-							"foo": "foo",
-							"bar": "",
+						Name: "bridge1",
+						Source: &Source{
+							Engine:   "mongo",
+							URI:      "mongodb://localhost:27017",
+							Database: "mydb",
 						},
-						Settings: &BridgeSettings{
-							PrimaryKey: "id",
+						IndexMap: map[Collection]*Destination{
+							"col1": {
+								IndexName:  "idx1",
+								PrimaryKey: "id",
+								Fields: map[string]string{
+									"foo": "foo",
+									"bar": "",
+								},
+							},
+							"col2": {
+								IndexName: "idx1",
+							},
 						},
 					},
 				},
@@ -77,21 +88,26 @@ func TestConfig_Validate(t *testing.T) {
 					APIURL: "",
 					APIKey: "masterKey",
 				},
-				Source: &Source{
-					Engine:   "mongo",
-					URI:      "mongodb://localhost:27017",
-					Database: "mydb",
-				},
 				Bridges: []*Bridge{
 					{
-						Collection: "mycollection",
-						IndexName:  "myindex",
-						Fields: map[string]string{
-							"foo": "foo",
-							"bar": "",
+						Name: "bridge1",
+						Source: &Source{
+							Engine:   "mongo",
+							URI:      "mongodb://localhost:27017",
+							Database: "mydb",
 						},
-						Settings: &BridgeSettings{
-							PrimaryKey: "id",
+						IndexMap: map[Collection]*Destination{
+							"col1": {
+								IndexName:  "idx1",
+								PrimaryKey: "id",
+								Fields: map[string]string{
+									"foo": "foo",
+									"bar": "",
+								},
+							},
+							"col2": {
+								IndexName: "idx1",
+							},
 						},
 					},
 				},
@@ -105,17 +121,22 @@ func TestConfig_Validate(t *testing.T) {
 					APIURL: "http://localhost:7700",
 					APIKey: "masterKey",
 				},
-				Source: nil,
 				Bridges: []*Bridge{
 					{
-						Collection: "mycollection",
-						IndexName:  "myindex",
-						Fields: map[string]string{
-							"foo": "foo",
-							"bar": "",
-						},
-						Settings: &BridgeSettings{
-							PrimaryKey: "id",
+						Name:   "bridge1",
+						Source: nil,
+						IndexMap: map[Collection]*Destination{
+							"col1": {
+								IndexName:  "idx1",
+								PrimaryKey: "id",
+								Fields: map[string]string{
+									"foo": "foo",
+									"bar": "",
+								},
+							},
+							"col2": {
+								IndexName: "idx1",
+							},
 						},
 					},
 				},
@@ -129,21 +150,26 @@ func TestConfig_Validate(t *testing.T) {
 					APIURL: "http://localhost:7700",
 					APIKey: "masterKey",
 				},
-				Source: &Source{
-					Engine:   "unsupported",
-					URI:      "mongodb://localhost:27017",
-					Database: "mydb",
-				},
 				Bridges: []*Bridge{
 					{
-						Collection: "mycollection",
-						IndexName:  "myindex",
-						Fields: map[string]string{
-							"foo": "foo",
-							"bar": "",
+						Name: "bridge1",
+						Source: &Source{
+							Engine:   "unsupported",
+							URI:      "mongodb://localhost:27017",
+							Database: "mydb",
 						},
-						Settings: &BridgeSettings{
-							PrimaryKey: "id",
+						IndexMap: map[Collection]*Destination{
+							"col1": {
+								IndexName:  "idx1",
+								PrimaryKey: "id",
+								Fields: map[string]string{
+									"foo": "foo",
+									"bar": "",
+								},
+							},
+							"col2": {
+								IndexName: "idx1",
+							},
 						},
 					},
 				},
@@ -157,21 +183,25 @@ func TestConfig_Validate(t *testing.T) {
 					APIURL: "http://localhost:7700",
 					APIKey: "masterKey",
 				},
-				Source: &Source{
-					Engine:   "mongo",
-					URI:      "",
-					Database: "mydb",
-				},
 				Bridges: []*Bridge{
 					{
-						Collection: "mycollection",
-						IndexName:  "myindex",
-						Fields: map[string]string{
-							"foo": "foo",
-							"bar": "",
+						Name: "bridge1",
+						Source: &Source{
+							Engine:   "mongo",
+							Database: "mydb",
 						},
-						Settings: &BridgeSettings{
-							PrimaryKey: "id",
+						IndexMap: map[Collection]*Destination{
+							"col1": {
+								IndexName:  "idx1",
+								PrimaryKey: "id",
+								Fields: map[string]string{
+									"foo": "foo",
+									"bar": "",
+								},
+							},
+							"col2": {
+								IndexName: "idx1",
+							},
 						},
 					},
 				},
@@ -185,21 +215,25 @@ func TestConfig_Validate(t *testing.T) {
 					APIURL: "http://localhost:7700",
 					APIKey: "masterKey",
 				},
-				Source: &Source{
-					Engine:   "mongo",
-					URI:      "mongodb://localhost:27017",
-					Database: "",
-				},
 				Bridges: []*Bridge{
 					{
-						Collection: "mycollection",
-						IndexName:  "myindex",
-						Fields: map[string]string{
-							"foo": "foo",
-							"bar": "",
+						Name: "bridge1",
+						Source: &Source{
+							Engine: "mongo",
+							URI:    "mongodb://localhost:27017",
 						},
-						Settings: &BridgeSettings{
-							PrimaryKey: "id",
+						IndexMap: map[Collection]*Destination{
+							"col1": {
+								IndexName:  "idx1",
+								PrimaryKey: "id",
+								Fields: map[string]string{
+									"foo": "foo",
+									"bar": "",
+								},
+							},
+							"col2": {
+								IndexName: "idx1",
+							},
 						},
 					},
 				},
@@ -213,70 +247,51 @@ func TestConfig_Validate(t *testing.T) {
 					APIURL: "http://localhost:7700",
 					APIKey: "masterKey",
 				},
-				Source: &Source{
-					Engine:   "mongo",
-					URI:      "mongodb://localhost:27017",
-					Database: "mydb",
+				Bridges: nil,
+			},
+			wantError: ErrMissingBridgeConfig,
+		},
+		{
+			name: "missing bridge index map",
+			config: &Config{
+				Meilisearch: &Meilisearch{
+					APIURL: "http://localhost:7700",
+					APIKey: "masterKey",
 				},
 				Bridges: nil,
 			},
 			wantError: ErrMissingBridgeConfig,
 		},
 		{
-			name: "missing bridge collection",
+			name: "missing primary key",
 			config: &Config{
 				Meilisearch: &Meilisearch{
 					APIURL: "http://localhost:7700",
 					APIKey: "masterKey",
 				},
-				Source: &Source{
-					Engine:   "mongo",
-					URI:      "mongodb://localhost:27017",
-					Database: "mydb",
-				},
 				Bridges: []*Bridge{
 					{
-						Collection: "",
-						IndexName:  "myindex",
-						Fields: map[string]string{
-							"foo": "foo",
-							"bar": "",
+						Name: "bridge1",
+						Source: &Source{
+							Engine: "mongo",
+							URI:    "mongodb://localhost:27017",
 						},
-						Settings: &BridgeSettings{
-							PrimaryKey: "id",
+						IndexMap: map[Collection]*Destination{
+							"col1": {
+								IndexName: "idx1",
+								Fields: map[string]string{
+									"foo": "foo",
+									"bar": "",
+								},
+							},
+							"col2": {
+								IndexName: "idx1",
+							},
 						},
 					},
 				},
 			},
-			wantError: ErrCollectionRequire,
-		},
-		{
-			name: "missing bridge index name",
-			config: &Config{
-				Meilisearch: &Meilisearch{
-					APIURL: "http://localhost:7700",
-					APIKey: "masterKey",
-				},
-				Source: &Source{
-					Engine:   "mongo",
-					URI:      "mongodb://localhost:27017",
-					Database: "mydb",
-				},
-				Bridges: []*Bridge{
-					{
-						Collection: "mycollection",
-						IndexName:  "",
-						Fields: map[string]string{
-							"foo": "foo",
-							"bar": "",
-						},
-						Settings: &BridgeSettings{
-							PrimaryKey: "id",
-						},
-					},
-				},
-			},
-			wantError: ErrIndexNameRequire,
+			wantError: ErrSourceDatabaseRequire,
 		},
 	}
 

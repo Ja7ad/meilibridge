@@ -16,7 +16,7 @@ func main() {
 
 	log := logger.DefaultLogger
 
-	root.AddCommand(buildSync())
+	root.AddCommand(buildSync(log))
 
 	err := root.Execute()
 	if err != nil {

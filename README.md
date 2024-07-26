@@ -39,7 +39,7 @@ services:
       - ./config.yml:/etc/meilibridge/config.yml
     restart: always
     command:
-      - sync
+      - sync start
 ```
 
 ## TODO

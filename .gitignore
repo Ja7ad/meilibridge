@@ -30,3 +30,4 @@ config.yaml
 
 # build
 dist/
+build/

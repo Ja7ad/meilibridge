@@ -147,7 +147,7 @@ func (m *mongo) onDemandWorker(
 								fmt.Println(res.DocumentId.Hex())
 								result, err = m.executor.FindOne(ctx, bson.D{{"_id", res.DocumentId}}, view)
 								if err != nil {
-									m.log.Error(
+									m.log.Warn(
 										fmt.Sprintf("failed find documents in view index: %s", t.des.IndexName),
 										"err", err.Error())
 									return
@@ -176,7 +176,7 @@ func (m *mongo) onDemandWorker(
 							doc := make(map[string]interface{})
 							err := idx.GetDocument(res.DocumentId.Hex(), nil, &doc)
 							if err != nil {
-								m.log.Error(
+								m.log.Warn(
 									fmt.Sprintf("failed to get document %s", res.DocumentId.Hex()),
 									"err", err.Error())
 								return
@@ -216,7 +216,7 @@ func (m *mongo) onDemandWorker(
 							if hasView {
 								res.Document, err = m.executor.FindOne(ctx, bson.M{"_id": res.DocumentId}, view)
 								if err != nil {
-									m.log.Error(
+									m.log.Warn(
 										fmt.Sprintf("failed find documents in view index: %s", t.des.IndexName),
 										"err", err.Error())
 									return

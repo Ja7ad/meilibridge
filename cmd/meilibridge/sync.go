@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"github.com/Ja7ad/meilibridge/config"
 	"github.com/Ja7ad/meilibridge/pkg/bridge"
 	"github.com/Ja7ad/meilibridge/pkg/database"
@@ -17,16 +18,39 @@ func buildSync(log logger.Logger) *cobra.Command {
 
 	sync.AddCommand(buildBulk(log))
 
-	sync.AddCommand(&cobra.Command{
+	sync.AddCommand(buildStart(log))
+
+	return sync
+}
+
+func buildStart(log logger.Logger) *cobra.Command {
+	start := &cobra.Command{
 		Use:   "start",
 		Short: "start realtime sync operation",
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			return nil
 		},
-	})
+	}
 
-	return sync
+	cfgPath := globalCfgFlag(start)
+
+	start.RunE = func(cmd *cobra.Command, args []string) error {
+		ctx := interruptSignal(cmd.Context())
+
+		b, err := initBridges(ctx, *cfgPath, log)
+		if err != nil {
+			return err
+		}
+
+		if err := b.Sync(ctx); err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	return start
 }
 
 func buildBulk(log logger.Logger) *cobra.Command {
@@ -39,35 +63,13 @@ func buildBulk(log logger.Logger) *cobra.Command {
 	con := bulk.Flags().Bool("continue", false, "sync new data on exists index")
 
 	bulk.RunE = func(cmd *cobra.Command, args []string) error {
-		cfg, err := config.New(*cfgPath)
+		ctx := interruptSignal(cmd.Context())
+
+		b, err := initBridges(ctx, *cfgPath, log)
 		if err != nil {
 			return err
 		}
-
-		if err := cfg.Validate(); err != nil {
-			return err
-		}
-
-		for _, b := range cfg.Bridges {
-			err = database.AddEngine(
-				cmd.Context(),
-				b.Source.Engine,
-				b.Source.URI,
-				b.Source.Database,
-				log,
-			)
-			if err != nil {
-				return err
-			}
-		}
-
-		meili, err := meilisearch.New(cmd.Context(), cfg.Meilisearch.APIURL, cfg.Meilisearch.APIKey, log)
-		if err != nil {
-			return err
-		}
-
-		b := bridge.New(cfg.Bridges, meili, log)
-		if err := b.BulkSync(cmd.Context(), *con); err != nil {
+		if err := b.BulkSync(ctx, *con); err != nil {
 			return err
 		}
 
@@ -75,4 +77,35 @@ func buildBulk(log logger.Logger) *cobra.Command {
 	}
 
 	return bulk
+}
+
+func initBridges(ctx context.Context, cfgPath string, log logger.Logger) (*bridge.Bridge, error) {
+	cfg, err := config.New(cfgPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := cfg.Validate(); err != nil {
+		return nil, err
+	}
+
+	for _, b := range cfg.Bridges {
+		err = database.AddEngine(
+			ctx,
+			b.Source.Engine,
+			b.Source.URI,
+			b.Source.Database,
+			log,
+		)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	meili, err := meilisearch.New(ctx, cfg.Meilisearch.APIURL, cfg.Meilisearch.APIKey, log)
+	if err != nil {
+		return nil, err
+	}
+
+	return bridge.New(cfg.Bridges, meili, log), nil
 }

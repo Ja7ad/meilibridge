@@ -20,6 +20,7 @@ bridges:
           index_name: idx1
           # set pk for fields in meilisearch, note if set value for fields please enter value not database key.
           # it's require.
+          # for mongodb use field _id for primary key.
           # https://www.meilisearch.com/docs/learn/core_concepts/primary_key#primary-field
           primary_key: id
           fields:

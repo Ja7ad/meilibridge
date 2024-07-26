@@ -31,12 +31,46 @@ func newBridge(
 	return b
 }
 
-func (b *Bridge) Sync() {}
+func (b *Bridge) Sync(ctx context.Context) error {
+	var wg sync.WaitGroup
+	b.log.InfoContext(ctx, "starting on demand sync...")
+	syncer := b.initSyncers()
+
+	for _, s := range syncer {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			s.OnDemand(ctx)
+		}()
+	}
+
+	b.log.InfoContext(ctx, "on demand is idle...")
+	wg.Wait()
+
+	return nil
+}
 
 func (b *Bridge) BulkSync(ctx context.Context, isContinue bool) error {
 	var wg sync.WaitGroup
 
 	b.log.InfoContext(ctx, "starting bulk sync")
+	syncer := b.initSyncers()
+
+	for _, s := range syncer {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			s.Bulk(ctx, isContinue)
+		}()
+	}
+
+	wg.Wait()
+	b.log.InfoContext(ctx, "finished bulk sync")
+
+	return nil
+}
+
+func (b *Bridge) initSyncers() []Syncer {
 	syncer := make([]Syncer, 0)
 
 	for _, bridge := range b.bridges {
@@ -52,16 +86,5 @@ func (b *Bridge) BulkSync(ctx context.Context, isContinue bool) error {
 		}
 	}
 
-	for _, s := range syncer {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			s.Bulk(ctx, isContinue)
-		}()
-	}
-
-	wg.Wait()
-	b.log.InfoContext(ctx, "finished bulk sync")
-
-	return nil
+	return syncer
 }

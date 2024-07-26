@@ -25,6 +25,6 @@ type task struct {
 }
 
 type Syncer interface {
-	OnDemand()
+	OnDemand(ctx context.Context)
 	Bulk(ctx context.Context, isContinue bool)
 }

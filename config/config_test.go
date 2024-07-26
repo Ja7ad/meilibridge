@@ -302,3 +302,72 @@ func TestConfig_Validate(t *testing.T) {
 		})
 	}
 }
+
+func TestCollection_GetCollectionAndView(t *testing.T) {
+	tests := []struct {
+		input    Collection
+		wantCol  string
+		wantView string
+	}{
+		{"collection:view", "collection", "view"},
+		{"singleitem", "", ""},
+		{"anothercollection:anotherview", "anothercollection", "anotherview"},
+		{"justcollection:", "justcollection", ""},
+		{":justview", "", "justview"},
+	}
+
+	for _, tt := range tests {
+		t.Run(string(tt.input), func(t *testing.T) {
+			col, view := tt.input.GetCollectionAndView()
+			if col != tt.wantCol {
+				t.Errorf("GetCollectionAndView() col = %v, want %v", col, tt.wantCol)
+			}
+			if view != tt.wantView {
+				t.Errorf("GetCollectionAndView() view = %v, want %v", view, tt.wantView)
+			}
+		})
+	}
+}
+
+func TestCollection_HasView(t *testing.T) {
+	tests := []struct {
+		input Collection
+		want  bool
+	}{
+		{"collection:view", true},
+		{"singleitem", false},
+		{"anothercollection:anotherview", true},
+		{"justcollection:", true},
+		{":justview", true},
+		{"no:view:here", false},
+	}
+
+	for _, tt := range tests {
+		t.Run(string(tt.input), func(t *testing.T) {
+			if got := tt.input.HasView(); got != tt.want {
+				t.Errorf("HasView() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestCollection_GetView(t *testing.T) {
+	tests := []struct {
+		input    Collection
+		wantView string
+	}{
+		{"collection:view", "view"},
+		{"singleitem", ""},
+		{"anothercollection:anotherview", "anotherview"},
+		{"justcollection:", ""},
+		{":justview", "justview"},
+	}
+
+	for _, tt := range tests {
+		t.Run(string(tt.input), func(t *testing.T) {
+			if got := tt.input.GetView(); got != tt.wantView {
+				t.Errorf("GetView() = %v, want %v", got, tt.wantView)
+			}
+		})
+	}
+}

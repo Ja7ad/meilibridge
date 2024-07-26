@@ -7,6 +7,7 @@ import (
 	"github.com/Ja7ad/meilibridge/pkg/database"
 	"github.com/Ja7ad/meilibridge/pkg/logger"
 	"github.com/Ja7ad/meilibridge/pkg/meilisearch"
+	"go.mongodb.org/mongo-driver/bson"
 	"sync"
 )
 
@@ -29,7 +30,7 @@ func (m *mongo) OnDemand(ctx context.Context) {
 	}
 
 	for col, des := range m.indexMap {
-		taskCh <- task{col: col.String(), des: des}
+		taskCh <- task{col: col, des: des}
 	}
 	close(taskCh)
 
@@ -47,7 +48,7 @@ func (m *mongo) Bulk(ctx context.Context, isContinue bool) {
 	}
 
 	for col, des := range m.indexMap {
-		taskCh <- task{col: col.String(), des: des}
+		taskCh <- task{col: col, des: des}
 	}
 	close(taskCh)
 
@@ -93,7 +94,16 @@ func (m *mongo) onDemandWorker(
 				return
 			}
 
-			m.executor.AddCollection(t.col)
+			hasView := false
+			col, view := t.col.String(), ""
+
+			if t.col.HasView() {
+				col, view = t.col.GetCollectionAndView()
+				m.executor.AddCollection(view)
+				hasView = true
+			}
+
+			m.executor.AddCollection(col)
 
 			if !m.meili.IsExistsIndex(t.des.IndexName) {
 				if err := recreateIndex(
@@ -107,7 +117,7 @@ func (m *mongo) onDemandWorker(
 				}
 			}
 
-			statCh, err := m.executor.Watcher(ctx, t.col)
+			statCh, err := m.executor.Watcher(ctx, col)
 			if err != nil {
 				m.log.Fatal(err.Error())
 			}
@@ -132,6 +142,18 @@ func (m *mongo) onDemandWorker(
 								"collection", t.col, "index", t.des.IndexName,
 							)
 							result := res.Document
+
+							if hasView {
+								fmt.Println(res.DocumentId.Hex())
+								result, err = m.executor.FindOne(ctx, bson.D{{"_id", res.DocumentId}}, view)
+								if err != nil {
+									m.log.Error(
+										fmt.Sprintf("failed find documents in view index: %s", t.des.IndexName),
+										"err", err.Error())
+									return
+								}
+							}
+
 							updateItemKeys([]*database.Result{&result}, t.des.Fields)
 							tInfo, err := idx.AddDocuments(&result)
 							if err != nil {
@@ -191,6 +213,16 @@ func (m *mongo) onDemandWorker(
 								"collection", t.col, "index", t.des.IndexName,
 							)
 
+							if hasView {
+								res.Document, err = m.executor.FindOne(ctx, bson.M{"_id": res.DocumentId}, view)
+								if err != nil {
+									m.log.Error(
+										fmt.Sprintf("failed find documents in view index: %s", t.des.IndexName),
+										"err", err.Error())
+									return
+								}
+							}
+
 							tInfo, err := idx.UpdateDocuments(&res.Document, t.des.PrimaryKey)
 							if err != nil {
 								m.log.Error(
@@ -245,10 +277,16 @@ func (m *mongo) bulkWorker(ctx context.Context,
 				return
 			}
 
-			s := m.meili.Stats()
-			m.executor.AddCollection(t.col)
+			col := t.col.String()
 
-			count, err := m.executor.Count(ctx, t.col)
+			if t.col.HasView() {
+				_, col = t.col.GetCollectionAndView()
+			}
+
+			s := m.meili.Stats()
+			m.executor.AddCollection(col)
+
+			count, err := m.executor.Count(ctx, col)
 			if err != nil {
 				statCh <- stat{err: err}
 				return
@@ -278,7 +316,7 @@ func (m *mongo) bulkWorker(ctx context.Context,
 			}
 
 			idx := m.meili.Index(t.des.IndexName)
-			cur, err := m.executor.FindLimit(ctx, _bulkLimit, t.col)
+			cur, err := m.executor.FindLimit(ctx, _bulkLimit, col)
 			if err != nil {
 				statCh <- stat{err: err}
 				return
@@ -309,7 +347,7 @@ func (m *mongo) bulkWorker(ctx context.Context,
 				totalIndexed += int64(len(items))
 
 				statCh <- stat{
-					col:     t.col,
+					col:     col,
 					index:   t.des.IndexName,
 					total:   count,
 					indexed: totalIndexed,

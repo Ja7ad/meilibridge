@@ -20,7 +20,7 @@ type stat struct {
 }
 
 type task struct {
-	col string
+	col config.Collection
 	des *config.Destination
 }
 

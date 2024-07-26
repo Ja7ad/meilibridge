@@ -1,5 +1,7 @@
 package config
 
+import "strings"
+
 type Config struct {
 	Meilisearch *Meilisearch `yaml:"meilisearch"`
 	Bridges     []*Bridge    `yaml:"bridges"`
@@ -87,5 +89,25 @@ const (
 func (e Engine) String() string { return string(e) }
 
 func (c Collection) String() string { return string(c) }
+
+func (c Collection) GetCollectionAndView() (col string, view string) {
+	items := strings.Split(c.String(), ":")
+	if len(items) > 1 {
+		return items[0], items[1]
+	}
+	return "", ""
+}
+
+func (c Collection) HasView() bool {
+	return len(strings.Split(c.String(), ":")) == 2
+}
+
+func (c Collection) GetView() string {
+	items := strings.Split(c.String(), ":")
+	if len(items) == 2 {
+		return items[1]
+	}
+	return ""
+}
 
 func (i Index) String() string { return string(i) }

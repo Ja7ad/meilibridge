@@ -7,12 +7,14 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"math"
+	"sync"
 )
 
 type Mongo struct {
 	cli *mongo.Client
 	log logger.Logger
 	db  *mongo.Database
+	mu  *sync.RWMutex
 
 	collections map[string]*mongo.Collection
 }
@@ -24,6 +26,7 @@ func newMongo(
 ) (MongoExecutor, error) {
 	mgo := &Mongo{
 		collections: make(map[string]*mongo.Collection),
+		mu:          new(sync.RWMutex),
 	}
 
 	cli, err := mongo.Connect(ctx, options.Client().ApplyURI(uri))
@@ -47,6 +50,8 @@ func (m *Mongo) Close() error {
 }
 
 func (m *Mongo) AddCollection(col string) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	if _, exists := m.collections[col]; !exists {
 		m.collections[col] = m.db.Collection(col)
 	}

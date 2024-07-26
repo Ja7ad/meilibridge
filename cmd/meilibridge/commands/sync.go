@@ -33,10 +33,10 @@ func buildStart(log logger.Logger) *cobra.Command {
 		},
 	}
 
-	cfgPath := globalCfgFlag(start)
+	cfgPath := configFlag(start)
 
 	start.RunE = func(cmd *cobra.Command, args []string) error {
-		ctx := interruptSignal(cmd.Context())
+		ctx := interruptSignal(cmd.Context(), log)
 
 		b, err := initBridges(ctx, *cfgPath, log)
 		if err != nil {
@@ -59,11 +59,11 @@ func buildBulk(log logger.Logger) *cobra.Command {
 		Short: "start bulk sync operation",
 	}
 
-	cfgPath := globalCfgFlag(bulk)
+	cfgPath := configFlag(bulk)
 	con := bulk.Flags().Bool("continue", false, "sync new data on exists index")
 
 	bulk.RunE = func(cmd *cobra.Command, args []string) error {
-		ctx := interruptSignal(cmd.Context())
+		ctx := interruptSignal(cmd.Context(), log)
 
 		b, err := initBridges(ctx, *cfgPath, log)
 		if err != nil {

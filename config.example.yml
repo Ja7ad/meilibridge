@@ -16,7 +16,8 @@ bridges:
       # index map is collection or table of data source to meilisearch index
       # source collection or table -> index
       index_map:
-        col1:
+        # if you want sync view table should original_name_table:view_name
+        col1:col1_view_name:
           index_name: idx1
           # set pk for fields in meilisearch, note if set value for fields please enter value not database key.
           # it's require.

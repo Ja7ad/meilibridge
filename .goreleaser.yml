@@ -4,13 +4,15 @@ builds:
     dir: ./cmd/meilibridge
     binary: meilibridge
     env:
-      - CGO_ENABLED=0
+      - CGO_ENABLED=1
     goos:
       - linux
       - windows
       - darwin
     goarch:
       - amd64
+      - arm
+      - arm64
     goarm:
       - "6"
       - "7"

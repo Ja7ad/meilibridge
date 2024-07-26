@@ -27,7 +27,7 @@ Download the latest release from [here](https://github.com/Ja7ad/meilibridge/rel
 Install the package using Go:
 
 ```shell
-go install github.com/ja7ad/meilibridge/cmd/meilibridge@latest
+go install github.com/Ja7ad/meilibridge/cmd/meilibridge@latest
 ```
 
 ### Docker

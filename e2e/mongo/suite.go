@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"errors"
+	"os"
+
 	"github.com/Ja7ad/meilibridge/config"
 	"github.com/Ja7ad/meilibridge/pkg/bridge"
 	"github.com/Ja7ad/meilibridge/pkg/database"
@@ -11,7 +13,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"os"
 )
 
 const (
@@ -101,34 +102,32 @@ func testSuite(ctx context.Context, isBulk bool) (*suite, error) {
 	return s, nil
 }
 
-var (
-	exampleBulk = []interface{}{
-		map[string]interface{}{
-			"_id":       primitive.NewObjectID(),
-			"name":      "foo1",
-			"last_name": "bar1",
-			"age":       13,
-		},
-		map[string]interface{}{
-			"_id":       primitive.NewObjectID(),
-			"name":      "foo2",
-			"last_name": "bar2",
-			"age":       33,
-		},
-		map[string]interface{}{
-			"_id":       primitive.NewObjectID(),
-			"name":      "foo3",
-			"last_name": "foo3",
-			"age":       34,
-		},
-		map[string]interface{}{
-			"_id":       primitive.NewObjectID(),
-			"name":      "foo4",
-			"last_name": "bar4",
-			"age":       21,
-		},
-	}
-)
+var exampleBulk = []interface{}{
+	map[string]interface{}{
+		"_id":       primitive.NewObjectID(),
+		"name":      "foo1",
+		"last_name": "bar1",
+		"age":       13,
+	},
+	map[string]interface{}{
+		"_id":       primitive.NewObjectID(),
+		"name":      "foo2",
+		"last_name": "bar2",
+		"age":       33,
+	},
+	map[string]interface{}{
+		"_id":       primitive.NewObjectID(),
+		"name":      "foo3",
+		"last_name": "foo3",
+		"age":       34,
+	},
+	map[string]interface{}{
+		"_id":       primitive.NewObjectID(),
+		"name":      "foo4",
+		"last_name": "bar4",
+		"age":       21,
+	},
+}
 
 func initBridges(ctx context.Context, cfgPath string, log logger.Logger) (*bridge.Bridge, error) {
 	cfg, err := config.New(cfgPath)

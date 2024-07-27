@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/Ja7ad/meilibridge/cmd/meilibridge/commands"
 	"github.com/Ja7ad/meilibridge/pkg/logger"
 	"github.com/Ja7ad/meilibridge/version"

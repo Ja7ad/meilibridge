@@ -1,9 +1,10 @@
 package logger
 
 import (
-	"github.com/stretchr/testify/assert"
 	"log/slog"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestHandler_Handle(t *testing.T) {

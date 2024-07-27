@@ -2,11 +2,12 @@ package database
 
 import (
 	"context"
+	"os"
+	"testing"
+
 	"github.com/Ja7ad/meilibridge/config"
 	"github.com/Ja7ad/meilibridge/pkg/logger"
 	"github.com/stretchr/testify/require"
-	"os"
-	"testing"
 )
 
 func Test_Engine(t *testing.T) {

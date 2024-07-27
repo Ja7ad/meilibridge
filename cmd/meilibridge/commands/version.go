@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+
 	"github.com/Ja7ad/meilibridge/version"
 	"github.com/spf13/cobra"
 )

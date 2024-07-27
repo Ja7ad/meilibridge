@@ -2,9 +2,10 @@ package database
 
 import (
 	"context"
+	"sync"
+
 	"github.com/Ja7ad/meilibridge/config"
 	"github.com/Ja7ad/meilibridge/pkg/logger"
-	"sync"
 )
 
 var _pool *sync.Map

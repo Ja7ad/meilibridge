@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+
 	"github.com/Ja7ad/meilibridge/pkg/bridge"
 	"github.com/Ja7ad/meilibridge/pkg/database"
 	"github.com/Ja7ad/meilibridge/pkg/logger"
@@ -59,7 +60,7 @@ func bulk(ctx context.Context) error {
 		return errors.New("old documents count mismatch")
 	}
 
-	var docs = []interface{}{
+	docs := []interface{}{
 		map[string]interface{}{
 			"_id":       primitive.NewObjectID(),
 			"name":      "foo6",

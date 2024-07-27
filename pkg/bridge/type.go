@@ -2,6 +2,7 @@ package bridge
 
 import (
 	"context"
+
 	"github.com/Ja7ad/meilibridge/config"
 	"github.com/Ja7ad/meilibridge/pkg/logger"
 	"github.com/Ja7ad/meilibridge/pkg/meilisearch"

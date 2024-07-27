@@ -2,6 +2,7 @@ package commands
 
 import (
 	"context"
+
 	"github.com/Ja7ad/meilibridge/config"
 	"github.com/Ja7ad/meilibridge/pkg/bridge"
 	"github.com/Ja7ad/meilibridge/pkg/database"
@@ -28,7 +29,6 @@ func buildStart(log logger.Logger) *cobra.Command {
 		Use:   "start",
 		Short: "start realtime sync operation",
 		RunE: func(cmd *cobra.Command, args []string) error {
-
 			return nil
 		},
 	}

@@ -2,11 +2,12 @@ package bridge
 
 import (
 	"context"
+	"sync"
+
 	"github.com/Ja7ad/meilibridge/config"
 	"github.com/Ja7ad/meilibridge/pkg/database"
 	"github.com/Ja7ad/meilibridge/pkg/logger"
 	"github.com/Ja7ad/meilibridge/pkg/meilisearch"
-	"sync"
 )
 
 func New(

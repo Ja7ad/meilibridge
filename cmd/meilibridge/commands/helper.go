@@ -2,11 +2,12 @@ package commands
 
 import (
 	"context"
-	"github.com/Ja7ad/meilibridge/pkg/logger"
-	"github.com/spf13/cobra"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/Ja7ad/meilibridge/pkg/logger"
+	"github.com/spf13/cobra"
 )
 
 func configFlag(cmd *cobra.Command) *string {

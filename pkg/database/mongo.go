@@ -2,12 +2,13 @@ package database
 
 import (
 	"context"
+	"math"
+	"sync"
+
 	"github.com/Ja7ad/meilibridge/pkg/logger"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"math"
-	"sync"
 )
 
 type Mongo struct {
@@ -138,7 +139,8 @@ func (m *Mongo) Watcher(ctx context.Context, col string) (<-chan func() (wType W
 				Update: struct {
 					UpdateFields Result
 					RemoveFields []string
-				}{UpdateFields: changeEvent.UpdateDescription.UpdatedFields,
+				}{
+					UpdateFields: changeEvent.UpdateDescription.UpdatedFields,
 					RemoveFields: changeEvent.UpdateDescription.RemovedFields,
 				},
 			}
@@ -210,19 +212,23 @@ func (c *cur) Result() ([]*Result, error) {
 }
 
 func buildChangeStreamAggregationPipeline() mongo.Pipeline {
-	pipeline := mongo.Pipeline{bson.D{
-		{Key: "$addFields", Value: bson.D{
-			{Key: "documentKey", Value: "$documentKey._id"},
+	pipeline := mongo.Pipeline{
+		bson.D{
+			{
+				Key: "$addFields", Value: bson.D{
+					{Key: "documentKey", Value: "$documentKey._id"},
+				},
+			},
 		},
-		},
-	},
 		bson.D{
 			{Key: "$project", Value: bson.D{
 				{Key: "operationType", Value: 1},
 				{Key: "documentKey", Value: 1},
 				{Key: "fullDocument", Value: 1},
 				{Key: "updateDescription", Value: 1},
-			}}}}
+			}},
+		},
+	}
 
 	return pipeline
 }

@@ -4,10 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
+
 	"github.com/Ja7ad/meilibridge/config"
 	"github.com/Ja7ad/meilibridge/pkg/logger"
 	meili "github.com/meilisearch/meilisearch-go"
-	"time"
 )
 
 const _defaultWaitInterval = 5 * time.Second
@@ -189,7 +190,8 @@ func (m *meilisearch) Version() string {
 
 func (m *meilisearch) WaitForTask(
 	ctx context.Context,
-	task *meili.TaskInfo) error {
+	task *meili.TaskInfo,
+) error {
 	if task.Status == meili.TaskStatusSucceeded {
 		return nil
 	}

@@ -3,10 +3,11 @@ package bridge
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"github.com/Ja7ad/meilibridge/config"
 	"github.com/Ja7ad/meilibridge/pkg/database"
 	"github.com/Ja7ad/meilibridge/pkg/meilisearch"
-	"strings"
 )
 
 func updateItemKeys(results []*database.Result, fields map[string]string) {

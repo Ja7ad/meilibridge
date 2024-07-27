@@ -173,13 +173,29 @@ func (m *mongo) onDemandWorker(
 								fmt.Sprintf("updating document %s", res.DocumentId.Hex()),
 								"collection", t.col, "index", t.des.IndexName,
 							)
-							doc := make(map[string]interface{})
+
+							doc := make(database.Result)
 							err := idx.GetDocument(res.DocumentId.Hex(), nil, &doc)
 							if err != nil {
-								m.log.Warn(
-									fmt.Sprintf("failed to get document %s", res.DocumentId.Hex()),
-									"err", err.Error())
-								return
+								doc, err = m.executor.FindOne(ctx, bson.D{{"_id", res.DocumentId}}, view)
+								if err != nil {
+									m.log.Warn(
+										fmt.Sprintf("failed find documents in view index: %s", t.des.IndexName),
+										"err", err.Error())
+									return
+								}
+								updateItemKeys([]*database.Result{&doc}, t.des.Fields)
+								tInfo, err := idx.AddDocuments(&doc)
+								if err != nil {
+									m.log.Error(
+										fmt.Sprintf("failed to add documents to index: %s", t.des.IndexName),
+										"err", err.Error())
+									return
+								}
+
+								if err := m.meili.WaitForTask(ctx, tInfo); err != nil {
+									m.log.Error("failed to wait for complete insert task", "err", err.Error())
+								}
 							}
 
 							for k, v := range res.Update.UpdateFields {

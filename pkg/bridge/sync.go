@@ -145,7 +145,6 @@ func (m *mongo) onDemandWorker(
 							result := res.Document
 
 							if hasView {
-								fmt.Println(res.DocumentId.Hex())
 								result, err = m.executor.FindOne(ctx, bson.D{{"_id", res.DocumentId}}, view)
 								if err != nil {
 									m.log.Warn(

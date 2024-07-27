@@ -1,0 +1,7 @@
+version: "3"
+services:
+  meilibridge:
+    image: ja7adr/meilibridge:latest
+    volumes:
+      - ./config.yml:/etc/meilibridge/config.yml
+    restart: always

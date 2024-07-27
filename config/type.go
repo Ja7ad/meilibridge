@@ -3,8 +3,18 @@ package config
 import "strings"
 
 type Config struct {
+	General     *General     `yaml:"general"`
 	Meilisearch *Meilisearch `yaml:"meilisearch"`
 	Bridges     []*Bridge    `yaml:"bridges"`
+}
+
+type General struct {
+	PProf *PProf `yaml:"pprof"`
+}
+
+type PProf struct {
+	Enable bool   `yaml:"enable"`
+	Listen string `yaml:"listen"`
 }
 
 type Meilisearch struct {

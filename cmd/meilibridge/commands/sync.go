@@ -2,6 +2,7 @@ package commands
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Ja7ad/meilibridge/config"
 	"github.com/Ja7ad/meilibridge/pkg/bridge"
@@ -38,9 +39,19 @@ func buildStart(log logger.Logger) *cobra.Command {
 	start.RunE = func(cmd *cobra.Command, args []string) error {
 		ctx := interruptSignal(cmd.Context(), log)
 
-		b, err := initBridges(ctx, *cfgPath, log)
+		b, cfg, err := initBridges(ctx, *cfgPath, log)
 		if err != nil {
 			return err
+		}
+
+		if cfg.General != nil && cfg.General.PProf != nil && cfg.General.PProf.Enable {
+			lis := cfg.General.PProf.Listen
+			sv := pprofSv(lis)
+			log.InfoContext(ctx, "started pprof server",
+				"addr", fmt.Sprintf("http://%s//debug/pprof/", lis))
+			go func() {
+				log.Fatal(sv.ListenAndServe().Error())
+			}()
 		}
 
 		if err := b.Sync(ctx); err != nil {
@@ -65,10 +76,11 @@ func buildBulk(log logger.Logger) *cobra.Command {
 	bulk.RunE = func(cmd *cobra.Command, args []string) error {
 		ctx := interruptSignal(cmd.Context(), log)
 
-		b, err := initBridges(ctx, *cfgPath, log)
+		b, _, err := initBridges(ctx, *cfgPath, log)
 		if err != nil {
 			return err
 		}
+
 		if err := b.BulkSync(ctx, *con); err != nil {
 			return err
 		}
@@ -79,14 +91,14 @@ func buildBulk(log logger.Logger) *cobra.Command {
 	return bulk
 }
 
-func initBridges(ctx context.Context, cfgPath string, log logger.Logger) (*bridge.Bridge, error) {
+func initBridges(ctx context.Context, cfgPath string, log logger.Logger) (*bridge.Bridge, *config.Config, error) {
 	cfg, err := config.New(cfgPath)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	if err := cfg.Validate(); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	for _, b := range cfg.Bridges {
@@ -98,14 +110,14 @@ func initBridges(ctx context.Context, cfgPath string, log logger.Logger) (*bridg
 			log,
 		)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
 
 	meili, err := meilisearch.New(ctx, cfg.Meilisearch.APIURL, cfg.Meilisearch.APIKey, log)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return bridge.New(cfg.Bridges, meili, log), nil
+	return bridge.New(cfg.Bridges, meili, log), cfg, nil
 }

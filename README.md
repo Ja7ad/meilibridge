@@ -67,6 +67,12 @@ services:
 example configuration for run meilibridge
 
 ```yaml
+general:
+  # https://pkg.go.dev/net/http/pprof
+  pprof:
+    enable: false
+    listen: 127.0.0.1:9900
+
 meilisearch:
   # API address of meilisearch
   api_url: http://127.0.0.1:7700

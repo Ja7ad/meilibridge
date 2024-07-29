@@ -24,6 +24,7 @@ providing an efficient and unified search solution.
 - Concurrent data bridging to Meilisearch
 - Customizable fields for indexing
 - Set primary key for index
+- Many meilisearch for specific bridge
 
 ## Installation
 
@@ -69,25 +70,32 @@ example configuration for run meilibridge
 
 ```yaml
 general:
-  # https://pkg.go.dev/net/http/pprof
   pprof:
     enable: false
     listen: 127.0.0.1:9900
 
-meilisearch:
-  # API address of meilisearch
-  api_url: http://127.0.0.1:7700
-  # master key https://www.meilisearch.com/docs/learn/security/differences_master_api_keys#master-key
-  api_key: foobar
-
 bridges:
-  - name: bridge 1
+  - name: bridge 1 # name is required
 
-    source:
+    meilisearch:
+      # API address of meilisearch
+      api_url: http://127.0.0.1:7700
+      # master key https://www.meilisearch.com/docs/learn/security/differences_master_api_keys#master-key
+      # optional
+      api_key: foobar
+
+    database:
       # database engine mongo, mysql, postgres
       engine: mongo
-      uri: "mongodb://localhost:27017"
+      host: "localhost"
+      port: 27017
+      user: "foo"
+      password: "bar"
       database: "foobar"
+      # custom parameter for database engine key:val
+      custom_params:
+        directConnection: true
+        replicaSet: test
 
     # index map is collection or table of data source to meilisearch index
     # source collection or table -> index
@@ -249,9 +257,16 @@ bridges:
 
   - name: bridge 2
 
-    source:
-      engine: mongo
-      uri: "mongodb://localhost:27017"
+    meilisearch:
+      api_url: http://127.0.0.1:7700
+      api_key: foobar
+
+    database:
+      engine: mysql
+      host: "localhost"
+      port: 6315
+      user: "foo"
+      password: "bar"
       database: "foobar"
 
     index_map:

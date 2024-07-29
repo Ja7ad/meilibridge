@@ -10,7 +10,7 @@ import (
 	"github.com/Ja7ad/meilibridge/config"
 )
 
-func dsnMaker(src *config.Source) string {
+func dsnMaker(src *config.Database) string {
 	dsn := strings.Builder{}
 
 	paramsGenerator := func() string {

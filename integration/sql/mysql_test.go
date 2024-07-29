@@ -19,7 +19,7 @@ const (
 	triggerUserTable = "user_log"
 )
 
-func setup(t *testing.T, source *config.Source) database.SQLExecutor {
+func setup(t *testing.T, source *config.Database) database.SQLExecutor {
 	ctx := context.Background()
 
 	err := database.AddEngine(ctx, source, logger.DefaultLogger)
@@ -38,7 +38,7 @@ func cleanup(closeFunc func() error) func() {
 }
 
 func Test_Count(t *testing.T) {
-	src := &config.Source{
+	src := &config.Database{
 		Engine:   config.MYSQL,
 		Host:     "127.0.0.1",
 		Port:     3306,
@@ -56,7 +56,7 @@ func Test_Count(t *testing.T) {
 }
 
 func Test_FindOne(t *testing.T) {
-	src := &config.Source{
+	src := &config.Database{
 		Engine:   config.MYSQL,
 		Host:     "127.0.0.1",
 		Port:     3306,
@@ -80,7 +80,7 @@ func Test_FindOne(t *testing.T) {
 }
 
 func Test_FindLimit(t *testing.T) {
-	src := &config.Source{
+	src := &config.Database{
 		Engine:   config.MYSQL,
 		Host:     "127.0.0.1",
 		Port:     3306,

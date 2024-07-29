@@ -11,7 +11,7 @@ import (
 )
 
 func Test_Engine(t *testing.T) {
-	err := AddEngine(context.Background(), &config.Source{
+	err := AddEngine(context.Background(), &config.Database{
 		Engine:   config.MONGO,
 		Host:     os.Getenv("MONGO_HOST"),
 		Database: os.Getenv("MONGO_DATABASE"),

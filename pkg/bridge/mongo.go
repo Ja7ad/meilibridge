@@ -17,7 +17,7 @@ import (
 type mongo struct {
 	name     string
 	executor database.MongoExecutor
-	indexMap map[config.Collection]*config.Destination
+	indexMap map[config.Collection]*config.IndexConfig
 	meili    meilisearch.Meilisearch
 	log      logger.Logger
 }

@@ -5,13 +5,11 @@ import (
 
 	"github.com/Ja7ad/meilibridge/config"
 	"github.com/Ja7ad/meilibridge/pkg/logger"
-	"github.com/Ja7ad/meilibridge/pkg/meilisearch"
 )
 
 const _bulkLimit = int64(100)
 
 type Bridge struct {
-	meili   meilisearch.Meilisearch
 	bridges []*config.Bridge
 	log     logger.Logger
 }
@@ -24,7 +22,7 @@ type stat struct {
 
 type task struct {
 	col config.Collection
-	des *config.Destination
+	des *config.IndexConfig
 }
 
 type Syncer interface {

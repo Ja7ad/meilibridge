@@ -29,9 +29,13 @@ type Bridge struct {
 }
 
 type Source struct {
-	Engine   Engine `yaml:"engine"`
-	URI      string `yaml:"uri"`
-	Database string `yaml:"database"`
+	Engine       Engine                 `yaml:"engine"`
+	Host         string                 `yaml:"host"`
+	Port         uint16                 `yaml:"port"`
+	User         string                 `yaml:"user"`
+	Password     string                 `yaml:"password"`
+	Database     string                 `yaml:"database"`
+	CustomParams map[string]interface{} `yaml:"custom_params"`
 }
 
 type Destination struct {
@@ -94,6 +98,7 @@ const (
 	MONGO    Engine = "mongo"
 	MYSQL    Engine = "mysql"
 	POSTGRES Engine = "postgres"
+	PLUGIN   Engine = "plugin"
 )
 
 func (e Engine) String() string { return string(e) }

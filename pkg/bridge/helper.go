@@ -61,14 +61,15 @@ func recreateIndex(
 	return nil
 }
 
-func progressBar(totalItems, totalIndexedItems int64, col, index string) {
+func progressBar(totalItems, totalIndexedItems int64, bridge, col, index string) {
 	percentage := float64(totalIndexedItems) / float64(totalItems) * 100
 	barLength := 50
 	filledLength := int(float64(barLength) * percentage / 100)
 	bar := strings.Repeat("=", filledLength) + strings.Repeat(" ", barLength-filledLength)
-	fmt.Printf("\r%.0f%% [%s] (%d/%d) %s -> %s\n",
+	fmt.Printf("\r%.0f%% [%s] %s - %s -> %s (%d/%d)\n",
 		percentage, bar,
-		totalIndexedItems, totalItems,
+		bridge,
 		col, index,
+		totalIndexedItems, totalItems,
 	)
 }

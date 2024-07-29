@@ -8,6 +8,8 @@ import (
 	"github.com/Ja7ad/meilibridge/pkg/meilisearch"
 )
 
+const _bulkLimit = int64(100)
+
 type Bridge struct {
 	meili   meilisearch.Meilisearch
 	bridges []*config.Bridge
@@ -26,6 +28,7 @@ type task struct {
 }
 
 type Syncer interface {
+	Name() string
 	OnDemand(ctx context.Context)
 	Bulk(ctx context.Context, isContinue bool)
 }

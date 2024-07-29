@@ -14,13 +14,16 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
-const _bulkLimit = int64(100)
-
 type mongo struct {
+	name     string
 	executor database.MongoExecutor
 	indexMap map[config.Collection]*config.Destination
 	meili    meilisearch.Meilisearch
 	log      logger.Logger
+}
+
+func (m *mongo) Name() string {
+	return m.name
 }
 
 func (m *mongo) OnDemand(ctx context.Context) {
@@ -70,6 +73,7 @@ func (m *mongo) Bulk(ctx context.Context, isContinue bool) {
 				progressBar(
 					s.total,
 					s.indexed,
+					m.name,
 					s.col,
 					s.index,
 				)

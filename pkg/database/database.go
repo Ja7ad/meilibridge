@@ -16,17 +16,30 @@ func init() {
 
 func AddEngine(
 	ctx context.Context,
-	engine config.Engine,
-	uri, database string,
+	source *config.Source,
 	log logger.Logger,
 ) error {
-	switch engine {
+	switch source.Engine {
 	case config.MONGO:
-		mgoExec, err := newMongo(ctx, uri, database, log)
+		mgoExec, err := newMongo(ctx, source, log)
 		if err != nil {
 			return err
 		}
 		_pool.Store(config.MONGO, mgoExec)
+		return nil
+	case config.MYSQL:
+		sqlExec, err := newSQL(source, log)
+		if err != nil {
+			return err
+		}
+		_pool.Store(config.MYSQL, sqlExec)
+		return nil
+	case config.POSTGRES:
+		sqlExec, err := newSQL(source, log)
+		if err != nil {
+			return err
+		}
+		_pool.Store(config.POSTGRES, sqlExec)
 		return nil
 	default:
 		return ErrEngineNotSupported

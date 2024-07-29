@@ -18,4 +18,5 @@ var (
 	ErrPrimaryKeyIsRequire      = errors.New("primary key is required")
 	ErrDatabaseHostIsRequired   = errors.New("database host is required")
 	ErrDatabasePortIsRequired   = errors.New("database port is required")
+	ErrBridgeNameIsRequired     = errors.New("bridge name is required")
 )

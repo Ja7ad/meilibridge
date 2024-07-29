@@ -11,12 +11,12 @@ import (
 func Test_DSNMaker(t *testing.T) {
 	tests := []struct {
 		Name     string
-		Source   *config.Source
+		Source   *config.Database
 		Excepted string
 	}{
 		{
 			Name: "mongodb",
-			Source: &config.Source{
+			Source: &config.Database{
 				Engine:   config.MONGO,
 				Host:     "127.0.0.1",
 				Port:     27017,
@@ -28,7 +28,7 @@ func Test_DSNMaker(t *testing.T) {
 		},
 		{
 			Name: "mysql",
-			Source: &config.Source{
+			Source: &config.Database{
 				Engine:   config.MYSQL,
 				Host:     "127.0.0.1",
 				Port:     3306,
@@ -40,7 +40,7 @@ func Test_DSNMaker(t *testing.T) {
 		},
 		{
 			Name: "postgres",
-			Source: &config.Source{
+			Source: &config.Database{
 				Engine:   config.POSTGRES,
 				Host:     "127.0.0.1",
 				Port:     9920,

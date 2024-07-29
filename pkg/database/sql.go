@@ -17,7 +17,7 @@ type SQL struct {
 }
 
 func newSQL(
-	src *config.Source,
+	src *config.Database,
 	log logger.Logger,
 ) (SQLExecutor, error) {
 	s := &SQL{

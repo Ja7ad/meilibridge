@@ -3,9 +3,8 @@ package config
 import "strings"
 
 type Config struct {
-	General     *General     `yaml:"general"`
-	Meilisearch *Meilisearch `yaml:"meilisearch"`
-	Bridges     []*Bridge    `yaml:"bridges"`
+	General *General  `yaml:"general"`
+	Bridges []*Bridge `yaml:"bridges"`
 }
 
 type General struct {
@@ -17,18 +16,19 @@ type PProf struct {
 	Listen string `yaml:"listen"`
 }
 
+type Bridge struct {
+	Name        string                      `yaml:"name"`
+	Meilisearch *Meilisearch                `yaml:"meilisearch"`
+	Database    *Database                   `yaml:"database"`
+	IndexMap    map[Collection]*IndexConfig `yaml:"index_map"`
+}
+
 type Meilisearch struct {
 	APIURL string `yaml:"api_url"`
 	APIKey string `yaml:"api_key"`
 }
 
-type Bridge struct {
-	Name     string                      `yaml:"name"`
-	Source   *Source                     `yaml:"source"`
-	IndexMap map[Collection]*Destination `yaml:"index_map"`
-}
-
-type Source struct {
+type Database struct {
 	Engine       Engine                 `yaml:"engine"`
 	Host         string                 `yaml:"host"`
 	Port         uint16                 `yaml:"port"`
@@ -38,7 +38,7 @@ type Source struct {
 	CustomParams map[string]interface{} `yaml:"custom_params"`
 }
 
-type Destination struct {
+type IndexConfig struct {
 	IndexName  string            `yaml:"index_name"`
 	PrimaryKey string            `yaml:"primary_key"`
 	Fields     map[string]string `yaml:"fields"`

@@ -24,7 +24,7 @@ type Mongo struct {
 
 func newMongo(
 	ctx context.Context,
-	src *config.Source,
+	src *config.Database,
 	log logger.Logger,
 ) (MongoExecutor, error) {
 	mgo := &Mongo{

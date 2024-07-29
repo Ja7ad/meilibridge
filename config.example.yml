@@ -3,16 +3,17 @@ general:
     enable: false
     listen: 127.0.0.1:9900
 
-meilisearch:
-  # API address of meilisearch
-  api_url: http://127.0.0.1:7700
-  # master key https://www.meilisearch.com/docs/learn/security/differences_master_api_keys#master-key
-  api_key: foobar
-
 bridges:
-  - name: bridge 1
+  - name: bridge 1 # name is required
 
-    source:
+    meilisearch:
+      # API address of meilisearch
+      api_url: http://127.0.0.1:7700
+      # master key https://www.meilisearch.com/docs/learn/security/differences_master_api_keys#master-key
+      # optional
+      api_key: foobar
+
+    database:
       # database engine mongo, mysql, postgres
       engine: mongo
       host: "localhost"
@@ -185,8 +186,11 @@ bridges:
 
   - name: bridge 2
 
-    source:
-      # database engine mongo, mysql, postgres
+    meilisearch:
+      api_url: http://127.0.0.1:7700
+      api_key: foobar
+
+    database:
       engine: mysql
       host: "localhost"
       port: 6315

@@ -22,39 +22,43 @@ func New(configPath string) (*Config, error) {
 }
 
 func (c *Config) Validate() error {
-	if c.Meilisearch == nil {
-		return ErrMissingMeilisearchConfig
-	}
-	if c.Meilisearch.APIURL == "" {
-		return ErrAPIUrlRequire
-	}
-
 	if c.Bridges == nil {
 		return ErrMissingBridgeConfig
 	}
 
 	for _, bridge := range c.Bridges {
+		if bridge.Name == "" {
+			return ErrBridgeNameIsRequired
+		}
+
+		if bridge.Meilisearch == nil {
+			return ErrMissingMeilisearchConfig
+		}
+		if bridge.Meilisearch.APIURL == "" {
+			return ErrAPIUrlRequire
+		}
+
 		if bridge.IndexMap == nil {
 			return ErrIndexMapRequire
 		}
 
-		if bridge.Source == nil {
+		if bridge.Database == nil {
 			return ErrMissingSourceConfig
 		}
 
-		if bridge.Source.Host == "" {
+		if bridge.Database.Host == "" {
 			return ErrDatabaseHostIsRequired
 		}
 
-		if bridge.Source.Port < 1 || bridge.Source.Port > 65535 {
+		if bridge.Database.Port < 1 || bridge.Database.Port > 65535 {
 			return ErrDatabasePortIsRequired
 		}
 
-		if bridge.Source.Database == "" {
+		if bridge.Database.Database == "" {
 			return ErrSourceDatabaseRequire
 		}
 
-		switch bridge.Source.Engine {
+		switch bridge.Database.Engine {
 		case MONGO:
 		case MYSQL, POSTGRES:
 		default:

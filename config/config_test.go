@@ -21,23 +21,23 @@ func TestConfig_Validate(t *testing.T) {
 		{
 			name: "valid config",
 			config: &Config{
-				Meilisearch: &Meilisearch{
-					APIURL: "http://localhost:7700",
-					APIKey: "masterKey",
-				},
 				Bridges: []*Bridge{
 					{
 						Name: "bridge1",
-						Source: &Source{
+						Meilisearch: &Meilisearch{
+							APIURL: "http://localhost:7700",
+							APIKey: "masterKey",
+						},
+						Database: &Database{
 							Engine:       "mongo",
 							Host:         "127.0.0.1",
 							Port:         27017,
 							User:         "root",
 							Password:     "foobar",
 							Database:     "mydb",
-							CustomParams: make([]map[string]interface{}, 0),
+							CustomParams: make(map[string]interface{}),
 						},
-						IndexMap: map[Collection]*Destination{
+						IndexMap: map[Collection]*IndexConfig{
 							"col1": {
 								IndexName:  "idx1",
 								PrimaryKey: "id",
@@ -59,20 +59,20 @@ func TestConfig_Validate(t *testing.T) {
 		{
 			name: "missing meilisearch",
 			config: &Config{
-				Meilisearch: nil,
 				Bridges: []*Bridge{
 					{
-						Name: "bridge1",
-						Source: &Source{
+						Name:        "bridge1",
+						Meilisearch: nil,
+						Database: &Database{
 							Engine:       "mongo",
 							Host:         "127.0.0.1",
 							Port:         27017,
 							User:         "root",
 							Password:     "foobar",
 							Database:     "mydb",
-							CustomParams: make([]map[string]interface{}, 0),
+							CustomParams: make(map[string]interface{}),
 						},
-						IndexMap: map[Collection]*Destination{
+						IndexMap: map[Collection]*IndexConfig{
 							"col1": {
 								IndexName:  "idx1",
 								PrimaryKey: "id",
@@ -93,23 +93,23 @@ func TestConfig_Validate(t *testing.T) {
 		{
 			name: "missing meilisearch APIURL",
 			config: &Config{
-				Meilisearch: &Meilisearch{
-					APIURL: "",
-					APIKey: "masterKey",
-				},
 				Bridges: []*Bridge{
 					{
 						Name: "bridge1",
-						Source: &Source{
+						Meilisearch: &Meilisearch{
+							APIURL: "",
+							APIKey: "masterKey",
+						},
+						Database: &Database{
 							Engine:       "mongo",
 							Host:         "127.0.0.1",
 							Port:         27017,
 							User:         "root",
 							Password:     "foobar",
 							Database:     "mydb",
-							CustomParams: make([]map[string]interface{}, 0),
+							CustomParams: make(map[string]interface{}),
 						},
-						IndexMap: map[Collection]*Destination{
+						IndexMap: map[Collection]*IndexConfig{
 							"col1": {
 								IndexName:  "idx1",
 								PrimaryKey: "id",
@@ -130,15 +130,16 @@ func TestConfig_Validate(t *testing.T) {
 		{
 			name: "missing source",
 			config: &Config{
-				Meilisearch: &Meilisearch{
-					APIURL: "http://localhost:7700",
-					APIKey: "masterKey",
-				},
+
 				Bridges: []*Bridge{
 					{
-						Name:   "bridge1",
-						Source: nil,
-						IndexMap: map[Collection]*Destination{
+						Name: "bridge1",
+						Meilisearch: &Meilisearch{
+							APIURL: "http://localhost:7700",
+							APIKey: "masterKey",
+						},
+						Database: nil,
+						IndexMap: map[Collection]*IndexConfig{
 							"col1": {
 								IndexName:  "idx1",
 								PrimaryKey: "id",
@@ -159,23 +160,24 @@ func TestConfig_Validate(t *testing.T) {
 		{
 			name: "unsupported source engine",
 			config: &Config{
-				Meilisearch: &Meilisearch{
-					APIURL: "http://localhost:7700",
-					APIKey: "masterKey",
-				},
+
 				Bridges: []*Bridge{
 					{
 						Name: "bridge1",
-						Source: &Source{
+						Meilisearch: &Meilisearch{
+							APIURL: "http://localhost:7700",
+							APIKey: "masterKey",
+						},
+						Database: &Database{
 							Engine:       "unsupported",
 							Host:         "127.0.0.1",
 							Port:         27017,
 							User:         "root",
 							Password:     "foobar",
 							Database:     "mydb",
-							CustomParams: make([]map[string]interface{}, 0),
+							CustomParams: make(map[string]interface{}),
 						},
-						IndexMap: map[Collection]*Destination{
+						IndexMap: map[Collection]*IndexConfig{
 							"col1": {
 								IndexName:  "idx1",
 								PrimaryKey: "id",
@@ -196,18 +198,19 @@ func TestConfig_Validate(t *testing.T) {
 		{
 			name: "missing database host",
 			config: &Config{
-				Meilisearch: &Meilisearch{
-					APIURL: "http://localhost:7700",
-					APIKey: "masterKey",
-				},
+
 				Bridges: []*Bridge{
 					{
 						Name: "bridge1",
-						Source: &Source{
+						Meilisearch: &Meilisearch{
+							APIURL: "http://localhost:7700",
+							APIKey: "masterKey",
+						},
+						Database: &Database{
 							Engine:   "mongo",
 							Database: "mydb",
 						},
-						IndexMap: map[Collection]*Destination{
+						IndexMap: map[Collection]*IndexConfig{
 							"col1": {
 								IndexName:  "idx1",
 								PrimaryKey: "id",
@@ -228,22 +231,23 @@ func TestConfig_Validate(t *testing.T) {
 		{
 			name: "missing source database",
 			config: &Config{
-				Meilisearch: &Meilisearch{
-					APIURL: "http://localhost:7700",
-					APIKey: "masterKey",
-				},
+
 				Bridges: []*Bridge{
 					{
 						Name: "bridge1",
-						Source: &Source{
+						Meilisearch: &Meilisearch{
+							APIURL: "http://localhost:7700",
+							APIKey: "masterKey",
+						},
+						Database: &Database{
 							Engine:       "mongo",
 							Host:         "127.0.0.1",
 							Port:         27017,
 							User:         "root",
 							Password:     "foobar",
-							CustomParams: make([]map[string]interface{}, 0),
+							CustomParams: make(map[string]interface{}),
 						},
-						IndexMap: map[Collection]*Destination{
+						IndexMap: map[Collection]*IndexConfig{
 							"col1": {
 								IndexName:  "idx1",
 								PrimaryKey: "id",
@@ -264,21 +268,22 @@ func TestConfig_Validate(t *testing.T) {
 		{
 			name: "missing source port",
 			config: &Config{
-				Meilisearch: &Meilisearch{
-					APIURL: "http://localhost:7700",
-					APIKey: "masterKey",
-				},
+
 				Bridges: []*Bridge{
 					{
 						Name: "bridge1",
-						Source: &Source{
+						Meilisearch: &Meilisearch{
+							APIURL: "http://localhost:7700",
+							APIKey: "masterKey",
+						},
+						Database: &Database{
 							Engine:       "mongo",
 							Host:         "127.0.0.1",
 							User:         "root",
 							Password:     "foobar",
-							CustomParams: make([]map[string]interface{}, 0),
+							CustomParams: make(map[string]interface{}),
 						},
-						IndexMap: map[Collection]*Destination{
+						IndexMap: map[Collection]*IndexConfig{
 							"col1": {
 								IndexName:  "idx1",
 								PrimaryKey: "id",
@@ -299,10 +304,6 @@ func TestConfig_Validate(t *testing.T) {
 		{
 			name: "missing bridge",
 			config: &Config{
-				Meilisearch: &Meilisearch{
-					APIURL: "http://localhost:7700",
-					APIKey: "masterKey",
-				},
 				Bridges: nil,
 			},
 			wantError: ErrMissingBridgeConfig,
@@ -310,34 +311,47 @@ func TestConfig_Validate(t *testing.T) {
 		{
 			name: "missing bridge index map",
 			config: &Config{
-				Meilisearch: &Meilisearch{
-					APIURL: "http://localhost:7700",
-					APIKey: "masterKey",
+				Bridges: []*Bridge{
+					{
+						Name: "bridge1",
+						Meilisearch: &Meilisearch{
+							APIURL: "http://localhost:7700",
+							APIKey: "masterKey",
+						},
+						Database: &Database{
+							Engine:       "mongo",
+							Host:         "127.0.0.1",
+							User:         "root",
+							Password:     "foobar",
+							CustomParams: make(map[string]interface{}),
+						},
+						IndexMap: nil,
+					},
 				},
-				Bridges: nil,
 			},
-			wantError: ErrMissingBridgeConfig,
+			wantError: ErrIndexMapRequire,
 		},
 		{
 			name: "missing primary key",
 			config: &Config{
-				Meilisearch: &Meilisearch{
-					APIURL: "http://localhost:7700",
-					APIKey: "masterKey",
-				},
+
 				Bridges: []*Bridge{
 					{
 						Name: "bridge1",
-						Source: &Source{
+						Meilisearch: &Meilisearch{
+							APIURL: "http://localhost:7700",
+							APIKey: "masterKey",
+						},
+						Database: &Database{
 							Engine:       "mongo",
 							Host:         "127.0.0.1",
 							Port:         27017,
 							User:         "root",
 							Password:     "foobar",
 							Database:     "mydb",
-							CustomParams: make([]map[string]interface{}, 0),
+							CustomParams: make(map[string]interface{}),
 						},
-						IndexMap: map[Collection]*Destination{
+						IndexMap: map[Collection]*IndexConfig{
 							"col1": {
 								IndexName: "idx1",
 								Fields: map[string]string{

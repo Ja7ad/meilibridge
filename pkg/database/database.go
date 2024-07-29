@@ -16,7 +16,7 @@ func init() {
 
 func AddEngine(
 	ctx context.Context,
-	source *config.Source,
+	source *config.Database,
 	log logger.Logger,
 ) error {
 	switch source.Engine {

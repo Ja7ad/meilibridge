@@ -8,7 +8,6 @@ import (
 	"github.com/Ja7ad/meilibridge/pkg/bridge"
 	"github.com/Ja7ad/meilibridge/pkg/database"
 	"github.com/Ja7ad/meilibridge/pkg/logger"
-	"github.com/Ja7ad/meilibridge/pkg/meilisearch"
 	"github.com/spf13/cobra"
 )
 
@@ -104,7 +103,7 @@ func initBridges(ctx context.Context, cfgPath string, log logger.Logger) (*bridg
 	for _, b := range cfg.Bridges {
 		err = database.AddEngine(
 			ctx,
-			b.Source,
+			b.Database,
 			log,
 		)
 		if err != nil {
@@ -112,10 +111,5 @@ func initBridges(ctx context.Context, cfgPath string, log logger.Logger) (*bridg
 		}
 	}
 
-	meili, err := meilisearch.New(ctx, cfg.Meilisearch.APIURL, cfg.Meilisearch.APIKey, log)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return bridge.New(cfg.Bridges, meili, log), cfg, nil
+	return bridge.New(cfg.Bridges, log), cfg, nil
 }

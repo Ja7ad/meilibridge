@@ -350,12 +350,3 @@ Example:
 ```shell
 $ meilibridge sync start -c ./config.yml
 ```
-
-## TODO
-
-- [x] MongoDB engine
-- [x] Bulk sync
-- [x] Bulk sync resync with continue
-- [x] Real-time sync
-- [ ] MySQL engine
-- [ ] PostgreSQL engine

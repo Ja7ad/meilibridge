@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:latest
+    container_name: mysql_container
+    environment:
+      MYSQL_ROOT_PASSWORD: foobar
+      MYSQL_DATABASE: sampledb
+      MYSQL_USER: foo
+      MYSQL_PASSWORD: bar
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./sample.sql:/docker-entrypoint-initdb.d/init.sql
+
+volumes:
+  mysql_data:

@@ -42,8 +42,12 @@ func (c *Config) Validate() error {
 			return ErrMissingSourceConfig
 		}
 
-		if bridge.Source.URI == "" {
-			return ErrSourceURIRequire
+		if bridge.Source.Host == "" {
+			return ErrDatabaseHostIsRequired
+		}
+
+		if bridge.Source.Port < 1 || bridge.Source.Port > 65535 {
+			return ErrDatabasePortIsRequired
 		}
 
 		if bridge.Source.Database == "" {
@@ -53,8 +57,6 @@ func (c *Config) Validate() error {
 		switch bridge.Source.Engine {
 		case MONGO:
 		case MYSQL, POSTGRES:
-			// TODO: currently not supported mysql and postgres
-			return ErrNotSupportedEngine
 		default:
 			return ErrNotSupportedEngine
 		}

@@ -5,6 +5,8 @@ import (
 	"math"
 	"sync"
 
+	"github.com/Ja7ad/meilibridge/config"
+
 	"github.com/Ja7ad/meilibridge/pkg/logger"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -22,7 +24,7 @@ type Mongo struct {
 
 func newMongo(
 	ctx context.Context,
-	uri string, database string,
+	src *config.Source,
 	log logger.Logger,
 ) (MongoExecutor, error) {
 	mgo := &Mongo{
@@ -30,7 +32,9 @@ func newMongo(
 		mu:          new(sync.RWMutex),
 	}
 
-	cli, err := mongo.Connect(ctx, options.Client().ApplyURI(uri))
+	dsn := dsnMaker(src)
+
+	cli, err := mongo.Connect(ctx, options.Client().ApplyURI(dsn))
 	if err != nil {
 		return nil, err
 	}
@@ -41,7 +45,7 @@ func newMongo(
 
 	mgo.cli = cli
 	mgo.log = log
-	mgo.db = cli.Database(database)
+	mgo.db = cli.Database(src.Database)
 
 	return mgo, nil
 }
@@ -68,34 +72,6 @@ func (m *Mongo) FindOne(ctx context.Context, filter interface{}, col string) (Re
 	return res, m.collections[col].FindOne(ctx, filter).Decode(&res)
 }
 
-func (m *Mongo) Find(ctx context.Context, filter interface{}, col string) <-chan Result {
-	resCh := make(chan Result)
-
-	go func() {
-		defer close(resCh)
-
-		cursor, err := m.collections[col].Find(ctx, filter)
-		if err != nil {
-			m.log.Fatal(err.Error())
-			return
-		}
-		defer func() {
-			_ = cursor.Close(ctx)
-		}()
-
-		for cursor.Next(ctx) {
-			var res Result
-			if err := cursor.Decode(&res); err != nil {
-				m.log.Fatal(err.Error())
-				return
-			}
-			resCh <- res
-		}
-	}()
-
-	return resCh
-}
-
 func (m *Mongo) FindLimit(ctx context.Context, limit int64, col string) (Cursor, error) {
 	count, err := m.Count(ctx, col)
 	if err != nil {
@@ -104,7 +80,7 @@ func (m *Mongo) FindLimit(ctx context.Context, limit int64, col string) (Cursor,
 
 	totalPages := int64(math.Ceil(float64(count) / float64(limit)))
 
-	return &cur{
+	return &mongoCursor{
 		col:   m.collections[col],
 		limit: limit,
 		pages: totalPages,
@@ -169,7 +145,7 @@ func (m *Mongo) wType(op string) WatcherType {
 	}
 }
 
-type cur struct {
+type mongoCursor struct {
 	total  int64
 	pages  int64
 	page   int64
@@ -180,7 +156,7 @@ type cur struct {
 	res    []*Result
 }
 
-func (c *cur) Next(ctx context.Context) bool {
+func (c *mongoCursor) Next(ctx context.Context) bool {
 	if c.page >= c.pages {
 		return false
 	}
@@ -207,7 +183,7 @@ func (c *cur) Next(ctx context.Context) bool {
 	return true
 }
 
-func (c *cur) Result() ([]*Result, error) {
+func (c *mongoCursor) Result() ([]*Result, error) {
 	return c.res, c.err
 }
 

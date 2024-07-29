@@ -11,7 +11,11 @@ import (
 )
 
 func Test_Engine(t *testing.T) {
-	err := AddEngine(context.Background(), config.MONGO, os.Getenv("MONGO_URI"), testDBName, logger.DefaultLogger)
+	err := AddEngine(context.Background(), &config.Source{
+		Engine:   config.MONGO,
+		Host:     os.Getenv("MONGO_HOST"),
+		Database: os.Getenv("MONGO_DATABASE"),
+	}, logger.DefaultLogger)
 	require.Nil(t, err)
 
 	mgoEngine := GetEngine[MongoExecutor](config.MONGO)

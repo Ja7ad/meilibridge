@@ -15,8 +15,15 @@ bridges:
       source:
         # database engine mongo, mysql, postgres
         engine: mongo
-        uri: "mongodb://localhost:27017"
+        host: "localhost"
+        port: 27017
+        user: "foo"
+        password: "bar"
         database: "foobar"
+        # custom parameter for database engine key:val
+        custom_params:
+          directConnection: true
+          replicaSet: test
 
       # index map is collection or table of data source to meilisearch index
       # source collection or table -> index
@@ -180,8 +187,12 @@ bridges:
     - name: bridge 2
 
       source:
-        engine: mongo
-        uri: "mongodb://localhost:27017"
+        # database engine mongo, mysql, postgres
+        engine: mysql
+        host: "localhost"
+        port: 6315
+        user: "foo"
+        password: "bar"
         database: "foobar"
 
       index_map:

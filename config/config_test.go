@@ -29,9 +29,13 @@ func TestConfig_Validate(t *testing.T) {
 					{
 						Name: "bridge1",
 						Source: &Source{
-							Engine:   "mongo",
-							URI:      "mongodb://localhost:27017",
-							Database: "mydb",
+							Engine:       "mongo",
+							Host:         "127.0.0.1",
+							Port:         27017,
+							User:         "root",
+							Password:     "foobar",
+							Database:     "mydb",
+							CustomParams: make([]map[string]interface{}, 0),
 						},
 						IndexMap: map[Collection]*Destination{
 							"col1": {
@@ -60,9 +64,13 @@ func TestConfig_Validate(t *testing.T) {
 					{
 						Name: "bridge1",
 						Source: &Source{
-							Engine:   "mongo",
-							URI:      "mongodb://localhost:27017",
-							Database: "mydb",
+							Engine:       "mongo",
+							Host:         "127.0.0.1",
+							Port:         27017,
+							User:         "root",
+							Password:     "foobar",
+							Database:     "mydb",
+							CustomParams: make([]map[string]interface{}, 0),
 						},
 						IndexMap: map[Collection]*Destination{
 							"col1": {
@@ -93,9 +101,13 @@ func TestConfig_Validate(t *testing.T) {
 					{
 						Name: "bridge1",
 						Source: &Source{
-							Engine:   "mongo",
-							URI:      "mongodb://localhost:27017",
-							Database: "mydb",
+							Engine:       "mongo",
+							Host:         "127.0.0.1",
+							Port:         27017,
+							User:         "root",
+							Password:     "foobar",
+							Database:     "mydb",
+							CustomParams: make([]map[string]interface{}, 0),
 						},
 						IndexMap: map[Collection]*Destination{
 							"col1": {
@@ -155,9 +167,13 @@ func TestConfig_Validate(t *testing.T) {
 					{
 						Name: "bridge1",
 						Source: &Source{
-							Engine:   "unsupported",
-							URI:      "mongodb://localhost:27017",
-							Database: "mydb",
+							Engine:       "unsupported",
+							Host:         "127.0.0.1",
+							Port:         27017,
+							User:         "root",
+							Password:     "foobar",
+							Database:     "mydb",
+							CustomParams: make([]map[string]interface{}, 0),
 						},
 						IndexMap: map[Collection]*Destination{
 							"col1": {
@@ -178,7 +194,7 @@ func TestConfig_Validate(t *testing.T) {
 			wantError: ErrNotSupportedEngine,
 		},
 		{
-			name: "missing source URI",
+			name: "missing database host",
 			config: &Config{
 				Meilisearch: &Meilisearch{
 					APIURL: "http://localhost:7700",
@@ -207,7 +223,7 @@ func TestConfig_Validate(t *testing.T) {
 					},
 				},
 			},
-			wantError: ErrSourceURIRequire,
+			wantError: ErrDatabaseHostIsRequired,
 		},
 		{
 			name: "missing source database",
@@ -220,8 +236,12 @@ func TestConfig_Validate(t *testing.T) {
 					{
 						Name: "bridge1",
 						Source: &Source{
-							Engine: "mongo",
-							URI:    "mongodb://localhost:27017",
+							Engine:       "mongo",
+							Host:         "127.0.0.1",
+							Port:         27017,
+							User:         "root",
+							Password:     "foobar",
+							CustomParams: make([]map[string]interface{}, 0),
 						},
 						IndexMap: map[Collection]*Destination{
 							"col1": {
@@ -240,6 +260,41 @@ func TestConfig_Validate(t *testing.T) {
 				},
 			},
 			wantError: ErrSourceDatabaseRequire,
+		},
+		{
+			name: "missing source port",
+			config: &Config{
+				Meilisearch: &Meilisearch{
+					APIURL: "http://localhost:7700",
+					APIKey: "masterKey",
+				},
+				Bridges: []*Bridge{
+					{
+						Name: "bridge1",
+						Source: &Source{
+							Engine:       "mongo",
+							Host:         "127.0.0.1",
+							User:         "root",
+							Password:     "foobar",
+							CustomParams: make([]map[string]interface{}, 0),
+						},
+						IndexMap: map[Collection]*Destination{
+							"col1": {
+								IndexName:  "idx1",
+								PrimaryKey: "id",
+								Fields: map[string]string{
+									"foo": "foo",
+									"bar": "",
+								},
+							},
+							"col2": {
+								IndexName: "idx1",
+							},
+						},
+					},
+				},
+			},
+			wantError: ErrDatabasePortIsRequired,
 		},
 		{
 			name: "missing bridge",
@@ -274,8 +329,13 @@ func TestConfig_Validate(t *testing.T) {
 					{
 						Name: "bridge1",
 						Source: &Source{
-							Engine: "mongo",
-							URI:    "mongodb://localhost:27017",
+							Engine:       "mongo",
+							Host:         "127.0.0.1",
+							Port:         27017,
+							User:         "root",
+							Password:     "foobar",
+							Database:     "mydb",
+							CustomParams: make([]map[string]interface{}, 0),
 						},
 						IndexMap: map[Collection]*Destination{
 							"col1": {
@@ -292,7 +352,7 @@ func TestConfig_Validate(t *testing.T) {
 					},
 				},
 			},
-			wantError: ErrSourceDatabaseRequire,
+			wantError: ErrPrimaryKeyIsRequire,
 		},
 	}
 

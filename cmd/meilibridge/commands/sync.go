@@ -48,7 +48,7 @@ func buildStart(log logger.Logger) *cobra.Command {
 			lis := cfg.General.PProf.Listen
 			sv := pprofSv(lis)
 			log.InfoContext(ctx, "started pprof server",
-				"addr", fmt.Sprintf("http://%s//debug/pprof/", lis))
+				"addr", fmt.Sprintf("http://%s/debug/pprof/", lis))
 			go func() {
 				log.Fatal(sv.ListenAndServe().Error())
 			}()
@@ -104,9 +104,7 @@ func initBridges(ctx context.Context, cfgPath string, log logger.Logger) (*bridg
 	for _, b := range cfg.Bridges {
 		err = database.AddEngine(
 			ctx,
-			b.Source.Engine,
-			b.Source.URI,
-			b.Source.Database,
+			b.Source,
 			log,
 		)
 		if err != nil {

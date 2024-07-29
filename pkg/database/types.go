@@ -63,11 +63,19 @@ type GlobalExecutor interface {
 
 type MongoExecutor interface {
 	GlobalExecutor
-	AddCollection(col string)
 
+	AddCollection(col string)
 	Count(ctx context.Context, col string) (int64, error)
 	FindOne(ctx context.Context, filter interface{}, col string) (Result, error)
-	Find(ctx context.Context, filter interface{}, col string) <-chan Result
 	FindLimit(ctx context.Context, limit int64, col string) (Cursor, error)
 	Watcher(ctx context.Context, col string) (<-chan func() (WatcherType, WatchResult), error)
+}
+
+type SQLExecutor interface {
+	GlobalExecutor
+
+	Count(ctx context.Context, table string) (int64, error)
+	FindOne(ctx context.Context, table string, query map[string]interface{}) (Result, error)
+	FindLimit(ctx context.Context, table string, limit int64) (Cursor, error)
+	// TODO: support trigger for realtime sync
 }

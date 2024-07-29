@@ -2,6 +2,7 @@ package bridge
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
 	"github.com/Ja7ad/meilibridge/config"
@@ -34,7 +35,6 @@ func newBridge(
 
 func (b *Bridge) Sync(ctx context.Context) error {
 	var wg sync.WaitGroup
-	b.log.InfoContext(ctx, "starting on demand sync...")
 	syncer := b.initSyncers()
 
 	for _, s := range syncer {
@@ -42,6 +42,7 @@ func (b *Bridge) Sync(ctx context.Context) error {
 		go func() {
 			defer wg.Done()
 			s.OnDemand(ctx)
+			b.log.InfoContext(ctx, fmt.Sprintf("started on demand sync bridge %s", s.Name()))
 		}()
 	}
 
@@ -54,13 +55,13 @@ func (b *Bridge) Sync(ctx context.Context) error {
 func (b *Bridge) BulkSync(ctx context.Context, isContinue bool) error {
 	var wg sync.WaitGroup
 
-	b.log.InfoContext(ctx, "starting bulk sync")
 	syncer := b.initSyncers()
 
 	for _, s := range syncer {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
+			b.log.InfoContext(ctx, fmt.Sprintf("starting bulk sync bridge %s", s.Name()))
 			s.Bulk(ctx, isContinue)
 		}()
 	}
@@ -78,12 +79,31 @@ func (b *Bridge) initSyncers() []Syncer {
 		switch bridge.Source.Engine {
 		case config.MONGO:
 			mgo := new(mongo)
+			mgo.name = bridge.Name
 			eng := database.GetEngine[database.MongoExecutor](config.MONGO)
 			mgo.executor = eng
 			mgo.meili = b.meili
 			mgo.indexMap = bridge.IndexMap
 			mgo.log = b.log
 			syncer = append(syncer, mgo)
+		case config.MYSQL:
+			sq := new(sql)
+			sq.name = bridge.Name
+			eng := database.GetEngine[database.SQLExecutor](config.MYSQL)
+			sq.executor = eng
+			sq.meili = b.meili
+			sq.indexMap = bridge.IndexMap
+			sq.log = b.log
+			syncer = append(syncer, sq)
+		case config.POSTGRES:
+			sq := new(sql)
+			sq.name = bridge.Name
+			eng := database.GetEngine[database.SQLExecutor](config.POSTGRES)
+			sq.executor = eng
+			sq.meili = b.meili
+			sq.indexMap = bridge.IndexMap
+			sq.log = b.log
+			syncer = append(syncer, sq)
 		}
 	}
 

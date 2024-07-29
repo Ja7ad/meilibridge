@@ -19,7 +19,7 @@ providing an efficient and unified search solution.
 - Supports multiple data sources
 - Compatible with various databases such as MongoDB (currently supported), MySQL, and PostgreSQL
 - Index configuration options
-- Real-time synchronization
+- Real-time synchronization (currently mysql and postgres not supported)
 - Bulk sync support with options to continue or reindex
 - Concurrent data bridging to Meilisearch
 - Customizable fields for indexing

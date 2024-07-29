@@ -102,4 +102,3 @@ NEW.created_at,
 NEW.updated_at);
 
 END;
-

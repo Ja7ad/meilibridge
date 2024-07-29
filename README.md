@@ -12,7 +12,6 @@ providing an efficient and unified search solution.
   - [Docker](#docker)
 - [Configuration](#example-configuration)
 - [Usage](#how-to-run)
-- [ToDo](#todo)
 
 ## Features
 

@@ -130,7 +130,6 @@ func TestConfig_Validate(t *testing.T) {
 		{
 			name: "missing source",
 			config: &Config{
-
 				Bridges: []*Bridge{
 					{
 						Name: "bridge1",
@@ -160,7 +159,6 @@ func TestConfig_Validate(t *testing.T) {
 		{
 			name: "unsupported source engine",
 			config: &Config{
-
 				Bridges: []*Bridge{
 					{
 						Name: "bridge1",
@@ -198,7 +196,6 @@ func TestConfig_Validate(t *testing.T) {
 		{
 			name: "missing database host",
 			config: &Config{
-
 				Bridges: []*Bridge{
 					{
 						Name: "bridge1",
@@ -231,7 +228,6 @@ func TestConfig_Validate(t *testing.T) {
 		{
 			name: "missing source database",
 			config: &Config{
-
 				Bridges: []*Bridge{
 					{
 						Name: "bridge1",
@@ -268,7 +264,6 @@ func TestConfig_Validate(t *testing.T) {
 		{
 			name: "missing source port",
 			config: &Config{
-
 				Bridges: []*Bridge{
 					{
 						Name: "bridge1",
@@ -334,7 +329,6 @@ func TestConfig_Validate(t *testing.T) {
 		{
 			name: "missing primary key",
 			config: &Config{
-
 				Bridges: []*Bridge{
 					{
 						Name: "bridge1",

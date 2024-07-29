@@ -3,8 +3,9 @@ package bridge
 import (
 	"context"
 	"fmt"
-	"github.com/Ja7ad/meilibridge/pkg/meilisearch"
 	"sync"
+
+	"github.com/Ja7ad/meilibridge/pkg/meilisearch"
 
 	"github.com/Ja7ad/meilibridge/config"
 	"github.com/Ja7ad/meilibridge/pkg/database"

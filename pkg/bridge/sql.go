@@ -93,8 +93,6 @@ func (s *sql) bulkWorker(ctx context.Context,
 				_, table = t.col.GetCollectionAndView()
 			}
 
-			st := s.meili.Stats()
-
 			count, err := s.executor.Count(ctx, table)
 			if err != nil {
 				statCh <- stat{err: err}
@@ -112,15 +110,6 @@ func (s *sql) bulkWorker(ctx context.Context,
 			} else {
 				if !s.meili.IsExistsIndex(t.des.IndexName) {
 					s.log.Fatal(fmt.Sprintf("index %s does not exist for resync", t.des.IndexName))
-				}
-
-				if s != nil {
-					if idxStat, ok := st.Indexes[t.des.IndexName]; ok {
-						if idxStat.NumberOfDocuments == count {
-							s.log.InfoContext(ctx, fmt.Sprintf("index %s already synced", t.des.IndexName))
-							return
-						}
-					}
 				}
 			}
 

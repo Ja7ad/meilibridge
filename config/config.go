@@ -22,6 +22,10 @@ func New(configPath string) (*Config, error) {
 }
 
 func (c *Config) Validate() error {
+	if c.General != nil && c.General.AutoBulkInterval < 1 {
+		c.General.AutoBulkInterval = 1
+	}
+
 	if c.Bridges == nil {
 		return ErrMissingBridgeConfig
 	}

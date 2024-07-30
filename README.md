@@ -24,6 +24,7 @@ providing an efficient and unified search solution.
 - Customizable fields for indexing
 - Set primary key for index
 - Many meilisearch for specific bridge
+- Scheduled automatic bulk sync on existing index in the background
 
 ## Installation
 
@@ -69,6 +70,7 @@ example configuration for run meilibridge
 
 ```yaml
 general:
+  auto_bulk_interval: 1800 # auto bulk continue data on exists index, default is 1800 second (30 min)
   pprof:
     enable: false
     listen: 127.0.0.1:9900
@@ -341,6 +343,30 @@ Example:
 
 ```shell
 $ meilibridge sync bulk -c ./config.yml --continue
+```
+
+### Auto bulk sync
+
+Scheduled automatic bulk sync on existing index in the background.
+
+```shell
+$ meilibridge sync bulk -h
+Start bulk sync operation.
+
+Usage:
+  meilibridge sync bulk [flags]
+
+Flags:
+  -c, --config string   Path to config file (default "/etc/meilibridge/config.yml")
+      --continue        Sync new data on existing index
+      --auto            Auto bulk sync on exists index every n seconds"
+  -h, --help            Help for bulk
+```
+
+Example:
+
+```shell
+$ meilibridge sync bulk -c ./config.yml --auto
 ```
 
 ### Real-time Sync

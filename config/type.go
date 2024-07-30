@@ -8,7 +8,8 @@ type Config struct {
 }
 
 type General struct {
-	PProf *PProf `yaml:"pprof"`
+	AutoBulkInterval int64  `yaml:"auto_bulk_interval"`
+	PProf            *PProf `yaml:"pprof"`
 }
 
 type PProf struct {

@@ -334,7 +334,6 @@ func (m *mongo) bulkWorker(ctx context.Context,
 				_, col = t.col.GetCollectionAndView()
 			}
 
-			s := m.meili.Stats()
 			m.executor.AddCollection(col)
 
 			count, err := m.executor.Count(ctx, col)
@@ -354,15 +353,6 @@ func (m *mongo) bulkWorker(ctx context.Context,
 			} else {
 				if !m.meili.IsExistsIndex(t.des.IndexName) {
 					m.log.Fatal(fmt.Sprintf("index %s does not exist for resync", t.des.IndexName))
-				}
-
-				if s != nil {
-					if idxStat, ok := s.Indexes[t.des.IndexName]; ok {
-						if idxStat.NumberOfDocuments == count {
-							m.log.InfoContext(ctx, fmt.Sprintf("index %s already synced", t.des.IndexName))
-							return
-						}
-					}
 				}
 			}
 

@@ -1,4 +1,5 @@
 general:
+  auto_bulk_interval: 1800 # auto bulk continue data on exists index, default is 1800 second (30 min)
   pprof:
     enable: false
     listen: 127.0.0.1:9900

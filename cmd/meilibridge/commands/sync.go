@@ -3,6 +3,7 @@ package commands
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/Ja7ad/meilibridge/config"
 	"github.com/Ja7ad/meilibridge/pkg/bridge"
@@ -71,13 +72,31 @@ func buildBulk(log logger.Logger) *cobra.Command {
 
 	cfgPath := configFlag(bulk)
 	con := bulk.Flags().Bool("continue", false, "sync new data on exists index")
+	auto := bulk.Flags().Bool("auto", false, "auto bulk sync on exists index every n seconds")
 
 	bulk.RunE = func(cmd *cobra.Command, args []string) error {
 		ctx := interruptSignal(cmd.Context(), log)
 
-		b, _, err := initBridges(ctx, *cfgPath, log)
+		b, cfg, err := initBridges(ctx, *cfgPath, log)
 		if err != nil {
 			return err
+		}
+
+		if *auto {
+			log.Info("auto bulk scheduler started")
+			ticker := time.NewTicker(time.Duration(cfg.General.AutoBulkInterval) * time.Second)
+			for {
+				select {
+				case <-cmd.Context().Done():
+					ticker.Stop()
+					log.Warn("auto bulk sync stopped")
+					return nil
+				case <-ticker.C:
+					if err := b.BulkSync(ctx, true); err != nil {
+						return err
+					}
+				}
+			}
 		}
 
 		if err := b.BulkSync(ctx, *con); err != nil {

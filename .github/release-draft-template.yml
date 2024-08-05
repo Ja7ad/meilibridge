@@ -6,6 +6,7 @@ categories:
     labels:
       - 'feat'
       - 'improve'
+      - 'dep'
   - title: '🐛 Bug Fixes'
     labels:
       - 'fix'

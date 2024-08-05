@@ -1,11 +1,10 @@
-name-template: 'Meilibridge v$RESOLVED_VERSION'
-tag-template: 'v$RESOLVED_VERSION'
-
+name-template: '$RESOLVED_VERSION'
+tag-template: '$RESOLVED_VERSION'
 categories:
   - title: '🚀 Features'
     labels:
-      - 'feat'
-      - 'improve'
+      - 'feature'
+      - 'enhancement'
       - 'dep'
   - title: '🐛 Bug Fixes'
     labels:
@@ -13,20 +12,13 @@ categories:
       - 'bugfix'
       - 'bug'
   - title: '🧰 Maintenance'
-    label: 'chore'
-
-change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
-sort-direction: 'ascending'
+    labels:
+      - 'chore'
+      - 'documentation'
 version-resolver:
-  major:
-    labels:
-      - 'major'
-  minor:
-    labels:
-      - 'minor'
-  patch:
-    labels:
-      - 'patch'
-  default: patch
+  default: minor
+change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
 template: |
+  ## Changes
+
   $CHANGES

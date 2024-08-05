@@ -4,8 +4,8 @@ tag-template: 'v$RESOLVED_VERSION'
 categories:
   - title: '🚀 Features'
     labels:
-      - 'feature'
-      - 'enhancement'
+      - 'feat'
+      - 'improve'
   - title: '🐛 Bug Fixes'
     labels:
       - 'fix'

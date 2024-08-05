@@ -22,6 +22,7 @@ func main() {
 
 	root.AddCommand(commands.BuildSync(log))
 	root.AddCommand(commands.BuildVersion())
+	root.AddCommand(commands.BuildIndex(log))
 
 	err := root.Execute()
 	if err != nil {

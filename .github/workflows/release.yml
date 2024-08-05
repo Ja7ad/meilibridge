@@ -29,6 +29,14 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
 
+      - name: Publish Release Notes
+        uses: release-drafter/release-drafter@v6
+        with:
+          publish: true
+          config-name: release-draft-template.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 

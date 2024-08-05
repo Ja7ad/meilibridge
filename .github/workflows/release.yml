@@ -29,7 +29,7 @@ jobs:
       - name: Publish Release Notes
         uses: release-drafter/release-drafter@v6
         with:
-          publish: startsWith(github.ref, "refs/tags")
+          publish: true
           config-name: release-draft-template.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}

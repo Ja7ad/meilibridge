@@ -3,7 +3,7 @@ module github.com/Ja7ad/meilibridge
 go 1.22.2
 
 require (
-	github.com/meilisearch/meilisearch-go v0.27.0
+	github.com/meilisearch/meilisearch-go v0.27.2
 	github.com/spf13/cobra v1.8.1
 	go.mongodb.org/mongo-driver v1.16.0
 	gopkg.in/yaml.v3 v3.0.1

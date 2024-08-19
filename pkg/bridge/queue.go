@@ -2,8 +2,8 @@ package bridge
 
 import (
 	"context"
-	"github.com/Ja7ad/meilibridge/pkg/internal/types"
 	"github.com/Ja7ad/meilibridge/pkg/logger"
+	"github.com/Ja7ad/meilibridge/pkg/types"
 	"time"
 )
 

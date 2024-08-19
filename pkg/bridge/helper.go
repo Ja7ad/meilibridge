@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/Ja7ad/meilibridge/pkg/internal/types"
+	"github.com/Ja7ad/meilibridge/pkg/types"
 	meili "github.com/meilisearch/meilisearch-go"
 	"io"
 	"net/http"

@@ -3,7 +3,7 @@ package bridge
 import (
 	"context"
 	"fmt"
-	"github.com/Ja7ad/meilibridge/pkg/internal/types"
+	"github.com/Ja7ad/meilibridge/pkg/types"
 	"net/http"
 	"sync"
 

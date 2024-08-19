@@ -18,15 +18,6 @@ jobs:
         with:
           go-version: '1.22'
 
-      - name: Publish Release Notes
-        uses: release-drafter/release-drafter@v6
-        with:
-          version: ${{ github.event.release.tag_name }}
-          publish: true
-          config-name: release-draft-template.yml
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
-
       - name: Run GoReleaser
         if: startsWith(github.ref, 'refs/tags/v')
         uses: goreleaser/goreleaser-action@v6

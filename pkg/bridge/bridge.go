@@ -3,6 +3,7 @@ package bridge
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"sync"
 
 	"github.com/Ja7ad/meilibridge/pkg/meilisearch"
@@ -14,18 +15,21 @@ import (
 
 func New(
 	bridges []*config.Bridge,
+	triggerCfg *config.TriggerSync,
 	log logger.Logger,
 ) *Bridge {
-	return newBridge(bridges, log)
+	return newBridge(bridges, triggerCfg, log)
 }
 
 func newBridge(
 	bridges []*config.Bridge,
+	triggerCfg *config.TriggerSync,
 	log logger.Logger,
 ) *Bridge {
 	b := &Bridge{
-		log:     log,
-		bridges: bridges,
+		log:        log,
+		bridges:    bridges,
+		triggerCfg: triggerCfg,
 	}
 
 	return b
@@ -77,6 +81,29 @@ func (b *Bridge) BulkSync(ctx context.Context, isContinue bool) error {
 	return nil
 }
 
+func (b *Bridge) TriggerSync(ctx context.Context) error {
+	b.mux = http.NewServeMux()
+
+	_, err := b.initSyncers(ctx)
+	if err != nil {
+		return err
+	}
+
+	sv := &http.Server{
+		Handler: b.mux,
+		Addr:    b.triggerCfg.Listen,
+	}
+
+	go func() {
+		<-ctx.Done()
+		sv.Shutdown(ctx)
+	}()
+
+	b.log.Info("started trigger sync webhook", "addr", b.triggerCfg.Listen)
+
+	return sv.ListenAndServe()
+}
+
 func (b *Bridge) initSyncers(ctx context.Context) ([]Syncer, error) {
 	syncer := make([]Syncer, 0)
 
@@ -85,8 +112,7 @@ func (b *Bridge) initSyncers(ctx context.Context) ([]Syncer, error) {
 		case config.MONGO:
 			mgo := new(mongo)
 			mgo.name = bridge.Name
-			eng := database.GetEngine[database.MongoExecutor](config.MONGO)
-			mgo.executor = eng
+			mgo.executor = database.GetEngine[database.MongoExecutor](config.MONGO)
 			mgo.indexMap = bridge.IndexMap
 			mgo.log = b.log
 
@@ -96,12 +122,28 @@ func (b *Bridge) initSyncers(ctx context.Context) ([]Syncer, error) {
 			}
 			mgo.meili = m
 
+			if b.mux != nil {
+				mgo.queue = newQueue(b.log)
+				mgo.triggerToken = b.triggerCfg.Token
+
+				go func() {
+					mgo.queue.Process(ctx, mgo.processTrigger)
+				}()
+
+				for col, idx := range bridge.IndexMap {
+					mgo.executor.AddCollection(col.GetView())
+					pattern := fmt.Sprintf("/%s/%s", bridge.Name, idx.IndexName)
+					b.mux.HandleFunc(pattern, mgo.Trigger())
+					b.log.Info(fmt.Sprintf("add trigger webhook for %s", idx.IndexName), "pattern", pattern)
+
+				}
+			}
+
 			syncer = append(syncer, mgo)
-		case config.MYSQL:
+		case config.POSTGRES, config.MYSQL:
 			sq := new(sql)
 			sq.name = bridge.Name
-			eng := database.GetEngine[database.SQLExecutor](config.MYSQL)
-			sq.executor = eng
+			sq.executor = database.GetEngine[database.SQLExecutor](bridge.Database.Engine)
 			sq.indexMap = bridge.IndexMap
 			sq.log = b.log
 
@@ -111,20 +153,20 @@ func (b *Bridge) initSyncers(ctx context.Context) ([]Syncer, error) {
 			}
 			sq.meili = m
 
-			syncer = append(syncer, sq)
-		case config.POSTGRES:
-			sq := new(sql)
-			sq.name = bridge.Name
-			eng := database.GetEngine[database.SQLExecutor](config.POSTGRES)
-			sq.executor = eng
-			sq.indexMap = bridge.IndexMap
-			sq.log = b.log
+			if b.mux != nil {
+				sq.queue = newQueue(b.log)
+				sq.triggerToken = b.triggerCfg.Token
 
-			m, err := meilisearch.New(ctx, bridge.Meilisearch.APIURL, bridge.Meilisearch.APIKey, b.log)
-			if err != nil {
-				return nil, err
+				go func() {
+					sq.queue.Process(ctx, sq.processTrigger)
+				}()
+
+				for _, idx := range bridge.IndexMap {
+					pattern := fmt.Sprintf("/%s/%s", bridge.Name, idx.IndexName)
+					b.mux.HandleFunc(pattern, sq.Trigger())
+					b.log.Info(fmt.Sprintf("add trigger webhook for %s", idx.IndexName), "pattern", pattern)
+				}
 			}
-			sq.meili = m
 
 			syncer = append(syncer, sq)
 		}

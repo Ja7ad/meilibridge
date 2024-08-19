@@ -1,7 +1,9 @@
 package config
 
 import (
+	"fmt"
 	"os"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -22,7 +24,11 @@ func New(configPath string) (*Config, error) {
 }
 
 func (c *Config) Validate() error {
-	if c.General != nil && c.General.AutoBulkInterval < 1 {
+	if c.General == nil {
+		c.General = new(General)
+	}
+
+	if c.General.AutoBulkInterval < 1 {
 		c.General.AutoBulkInterval = 1
 	}
 
@@ -33,6 +39,11 @@ func (c *Config) Validate() error {
 	for _, bridge := range c.Bridges {
 		if bridge.Name == "" {
 			return ErrBridgeNameIsRequired
+		}
+
+		if strings.Contains(bridge.Name, " ") {
+			bridge.Name = strings.Trim(bridge.Name, " ")
+			bridge.Name = fmt.Sprintf("%s", strings.Join(strings.Split(bridge.Name, " "), "-"))
 		}
 
 		if bridge.Meilisearch == nil {

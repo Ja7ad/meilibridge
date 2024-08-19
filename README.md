@@ -25,6 +25,7 @@ providing an efficient and unified search solution.
 - Set primary key for index
 - Many meilisearch for specific bridge
 - Scheduled automatic bulk sync on existing index in the background
+- Trigger sync for real-time sync by webhook trigger
 
 ## Installation
 
@@ -70,13 +71,19 @@ example configuration for run meilibridge
 
 ```yaml
 general:
+  # The trigger sync method is a new way to synchronize data by receiving signals from webhooks.
+  # It creates a custom route for each bridge to receive the signal and initiate data synchronization.
+  # For example: http://127.0.0.1:8800/{bridge_name}
+  trigger_sync:
+    token: foobar # The token secures your webhook and must be sent in the header with the key "x-token-key".
+    listen: 127.0.0.1:8800
   auto_bulk_interval: 1800 # auto bulk continue data on exists index, default is 1800 second (30 min)
   pprof:
     enable: false
     listen: 127.0.0.1:9900
 
 bridges:
-  - name: bridge 1 # name is required
+  - name: bridge1 # name is required
 
     meilisearch:
       # API address of meilisearch
@@ -390,3 +397,48 @@ Example:
 ```shell
 $ meilibridge sync start -c ./config.yml
 ```
+
+### Trigger Sync
+
+`meilibridge` supports trigger synchronization with specific webhooks for indexes. Each index has a unique webhook 
+at the path `/{bridge_name}/{index_name}`.
+
+```shell
+$ meilibridge sync trigger -h
+start trigger sync
+
+Usage:
+  meilibridge sync trigger [flags]
+
+Flags:
+  -c, --config string   path to config file (default "/etc/meilibridge/config.yml")
+  -h, --help            help for trigger
+```
+
+Example:
+
+```shell
+$ meilibridge sync trigger -c ./config.yml
+```
+
+Example API call to the webhook:
+
+```shell
+curl --location 'http://127.0.0.1:8800/bridge/foo' \
+--header 'x-token-key: foobar' \
+--header 'Content-Type: application/json' \
+--data '{
+    "index_uid": "foo",
+    "type": "UPDATE",
+    "document": {
+        "primary_key": "_id",
+        "primary_value": "65d0982320ff6c9a9a09eca2"
+    }
+}'
+```
+
+- `index_uid`: The index UID in Meilisearch.
+- `type`: The operation type for the document (INSERT, UPDATE, DELETE).
+- `document`: The object used to find the document.
+- `document.primary_key`: The column name or field name that serves as the primary key for the Meilisearch index.
+- `document.primary_value`: The specific value used to find the document in the database table or collection for synchronization with Meilisearch.

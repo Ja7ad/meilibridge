@@ -2,6 +2,7 @@ package commands
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -15,12 +16,14 @@ import (
 func BuildSync(log logger.Logger) *cobra.Command {
 	sync := &cobra.Command{
 		Use:   "sync",
-		Short: "bulk or realtime sync",
+		Short: "bulk, realtime and trigger sync",
 	}
 
 	sync.AddCommand(buildBulk(log))
 
 	sync.AddCommand(buildStart(log))
+
+	sync.AddCommand(buildTrigger(log))
 
 	return sync
 }
@@ -44,15 +47,7 @@ func buildStart(log logger.Logger) *cobra.Command {
 			return err
 		}
 
-		if cfg.General != nil && cfg.General.PProf != nil && cfg.General.PProf.Enable {
-			lis := cfg.General.PProf.Listen
-			sv := pprofSv(lis)
-			log.InfoContext(ctx, "started pprof server",
-				"addr", fmt.Sprintf("http://%s/debug/pprof/", lis))
-			go func() {
-				log.Fatal(sv.ListenAndServe().Error())
-			}()
-		}
+		startPProf(log, cfg.General)
 
 		if err := b.Sync(ctx); err != nil {
 			return err
@@ -84,6 +79,8 @@ func buildBulk(log logger.Logger) *cobra.Command {
 
 		if *auto {
 			log.Info("auto bulk scheduler started")
+			startPProf(log, cfg.General)
+
 			ticker := time.NewTicker(time.Duration(cfg.General.AutoBulkInterval) * time.Second)
 			for {
 				select {
@@ -109,6 +106,34 @@ func buildBulk(log logger.Logger) *cobra.Command {
 	return bulk
 }
 
+func buildTrigger(log logger.Logger) *cobra.Command {
+	trigger := &cobra.Command{
+		Use:   "trigger",
+		Short: "start trigger sync",
+	}
+
+	cfgPath := configFlag(trigger)
+
+	trigger.RunE = func(cmd *cobra.Command, args []string) error {
+		ctx := interruptSignal(cmd.Context(), log)
+
+		b, cfg, err := initBridges(ctx, *cfgPath, log)
+		if err != nil {
+			return err
+		}
+
+		if cfg.General.TriggerSync == nil {
+			return errors.New("trigger sync configuration is null")
+		}
+
+		startPProf(log, cfg.General)
+
+		return b.TriggerSync(ctx)
+	}
+
+	return trigger
+}
+
 func initBridges(ctx context.Context, cfgPath string, log logger.Logger) (*bridge.Bridge, *config.Config, error) {
 	cfg, err := config.New(cfgPath)
 	if err != nil {
@@ -130,5 +155,17 @@ func initBridges(ctx context.Context, cfgPath string, log logger.Logger) (*bridg
 		}
 	}
 
-	return bridge.New(cfg.Bridges, log), cfg, nil
+	return bridge.New(cfg.Bridges, cfg.General.TriggerSync, log), cfg, nil
+}
+
+func startPProf(log logger.Logger, general *config.General) {
+	if general.PProf != nil && general.PProf.Enable {
+		lis := general.PProf.Listen
+		sv := pprofSv(lis)
+		log.Info("started pprof server",
+			"addr", fmt.Sprintf("http://%s/debug/pprof/", lis))
+		go func() {
+			log.Fatal(sv.ListenAndServe().Error())
+		}()
+	}
 }

@@ -1,11 +1,17 @@
 general:
+  # The trigger sync method is a new way to synchronize data by receiving signals from webhooks.
+  # It creates a custom route for each bridge to receive the signal and initiate data synchronization.
+  # For example: http://127.0.0.1:8800/{bridge_name}
+  trigger_sync:
+    token: foobar # The token secures your webhook and must be sent in the header with the key "x-token-key".
+    listen: 127.0.0.1:8800
   auto_bulk_interval: 1800 # auto bulk continue data on exists index, default is 1800 second (30 min)
   pprof:
     enable: false
     listen: 127.0.0.1:9900
 
 bridges:
-  - name: bridge 1 # name is required
+  - name: bridge1 # name is required
 
     meilisearch:
       # API address of meilisearch

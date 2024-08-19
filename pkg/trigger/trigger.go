@@ -57,7 +57,7 @@ func (t *Trigger) Trigger(ctx context.Context, bridge string, req *types.Trigger
 		if err := json.NewDecoder(resp.Body).Decode(&msg); err != nil {
 			return err
 		}
-		return errors.New(fmt.Sprintf("%v", msg))
+		return errors.New(fmt.Sprintf("%d - %v", resp.StatusCode, msg))
 	}
 
 	return nil

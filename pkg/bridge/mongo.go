@@ -3,6 +3,9 @@ package bridge
 import (
 	"context"
 	"fmt"
+	"github.com/Ja7ad/meilibridge/pkg/internal/types"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"net/http"
 	"sync"
 
 	meili "github.com/meilisearch/meilisearch-go"
@@ -15,15 +18,21 @@ import (
 )
 
 type mongo struct {
-	name     string
-	executor database.MongoExecutor
-	indexMap map[config.Collection]*config.IndexConfig
-	meili    meilisearch.Meilisearch
-	log      logger.Logger
+	name         string
+	triggerToken string
+	executor     database.MongoExecutor
+	indexMap     map[config.Collection]*config.IndexConfig
+	meili        meilisearch.Meilisearch
+	queue        *Queue
+	log          logger.Logger
 }
 
 func (m *mongo) Name() string {
 	return m.name
+}
+
+func (m *mongo) Trigger() http.HandlerFunc {
+	return triggerHandler(m.triggerToken, m.queue)
 }
 
 func (m *mongo) OnDemand(ctx context.Context) {
@@ -397,4 +406,51 @@ func (m *mongo) bulkWorker(ctx context.Context,
 			}
 		}
 	}
+}
+
+func (m *mongo) processTrigger(ctx context.Context, item types.TriggerRequestBody) (bool, error) {
+	col, idx := indexConfigByUID(item.IndexUID, m.indexMap)
+	if idx == nil {
+		return false, fmt.Errorf("invalid index UID %s", item.IndexUID)
+	}
+
+	if !m.meili.IsExistsIndex(idx.IndexName) {
+		if err := recreateIndex(ctx, idx.IndexName, idx.PrimaryKey, idx.Settings, m.meili); err != nil {
+			return true, err
+		}
+	}
+
+	var (
+		val        any
+		identifier string
+	)
+	val = item.Document.PrimaryValue
+
+	identifier = fmt.Sprintf("%v", item.Document.PrimaryValue)
+
+	obj, ok := item.Document.PrimaryValue.(string)
+	if ok {
+		v, err := primitive.ObjectIDFromHex(obj)
+		if err == nil {
+			val = v
+			identifier = obj
+		}
+	}
+
+	res, err := m.executor.FindOne(ctx, bson.M{item.Document.PrimaryKey: val}, col)
+	if err != nil {
+		return true, err
+	}
+
+	if err := processTrigger(ctx,
+		m.meili.WaitForTask,
+		m.meili.Index(item.IndexUID),
+		item.Type,
+		res,
+		identifier,
+	); err != nil {
+		return true, err
+	}
+
+	return false, nil
 }

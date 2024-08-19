@@ -3,6 +3,8 @@ package bridge
 import (
 	"context"
 	"fmt"
+	"github.com/Ja7ad/meilibridge/pkg/internal/types"
+	"net/http"
 	"sync"
 
 	"github.com/Ja7ad/meilibridge/config"
@@ -12,15 +14,21 @@ import (
 )
 
 type sql struct {
-	name     string
-	executor database.SQLExecutor
-	indexMap map[config.Collection]*config.IndexConfig
-	meili    meilisearch.Meilisearch
-	log      logger.Logger
+	name         string
+	executor     database.SQLExecutor
+	indexMap     map[config.Collection]*config.IndexConfig
+	meili        meilisearch.Meilisearch
+	triggerToken string
+	queue        *Queue
+	log          logger.Logger
 }
 
 func (s *sql) Name() string {
 	return s.name
+}
+
+func (s *sql) Trigger() http.HandlerFunc {
+	return triggerHandler(s.triggerToken, s.queue)
 }
 
 func (s *sql) OnDemand(_ context.Context) {
@@ -154,4 +162,34 @@ func (s *sql) bulkWorker(ctx context.Context,
 			}
 		}
 	}
+}
+
+func (s *sql) processTrigger(ctx context.Context, item types.TriggerRequestBody) (bool, error) {
+	table, idx := indexConfigByUID(item.IndexUID, s.indexMap)
+	if idx == nil {
+		return false, fmt.Errorf("invalid index UID %s", item.IndexUID)
+	}
+
+	if !s.meili.IsExistsIndex(idx.IndexName) {
+		if err := recreateIndex(ctx, idx.IndexName, idx.PrimaryKey, idx.Settings, s.meili); err != nil {
+			return true, err
+		}
+	}
+
+	res, err := s.executor.FindOne(ctx, table, map[string]any{item.Document.PrimaryKey: item.Document.PrimaryValue})
+	if err != nil {
+		return true, err
+	}
+
+	if err := processTrigger(ctx,
+		s.meili.WaitForTask,
+		s.meili.Index(item.IndexUID),
+		item.Type,
+		res,
+		fmt.Sprintf("%v", item.Document.PrimaryValue),
+	); err != nil {
+		return true, err
+	}
+
+	return false, nil
 }

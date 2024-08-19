@@ -8,8 +8,14 @@ type Config struct {
 }
 
 type General struct {
-	AutoBulkInterval int64  `yaml:"auto_bulk_interval"`
-	PProf            *PProf `yaml:"pprof"`
+	TriggerSync      *TriggerSync `yaml:"trigger_sync"`
+	AutoBulkInterval int64        `yaml:"auto_bulk_interval"`
+	PProf            *PProf       `yaml:"pprof"`
+}
+
+type TriggerSync struct {
+	Token  string `yaml:"token"`
+	Listen string `yaml:"listen"`
 }
 
 type PProf struct {
@@ -123,7 +129,17 @@ func (c Collection) GetView() string {
 	if len(items) == 2 {
 		return items[1]
 	}
-	return ""
+	return c.String()
+}
+
+func (c Collection) GetCollection() string {
+	if c.HasView() {
+		items := strings.Split(c.String(), ":")
+		if len(items) == 2 {
+			return items[0]
+		}
+	}
+	return c.String()
 }
 
 func (i Index) String() string { return string(i) }

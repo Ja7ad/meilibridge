@@ -17,8 +17,9 @@ type Trigger struct {
 	token  string
 }
 
-func New(client *http.Client, host, token string) *Trigger {
-	return &Trigger{client: client, host: host, token: token}
+func New(client *http.Client, host, token string) (*Trigger, error) {
+	t := &Trigger{client: client, host: host, token: token}
+	return t, t.health()
 }
 
 func (t *Trigger) Trigger(ctx context.Context, bridge string, req *types.TriggerRequestBody) error {
@@ -58,6 +59,25 @@ func (t *Trigger) Trigger(ctx context.Context, bridge string, req *types.Trigger
 			return err
 		}
 		return errors.New(fmt.Sprintf("%d - %v", resp.StatusCode, msg))
+	}
+
+	return nil
+}
+
+func (t *Trigger) health() error {
+	r, err := http.NewRequest(http.MethodGet, t.host, http.NoBody)
+	if err != nil {
+		return err
+	}
+
+	resp, err := t.client.Do(r)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("health check failed: %d", resp.StatusCode)
 	}
 
 	return nil

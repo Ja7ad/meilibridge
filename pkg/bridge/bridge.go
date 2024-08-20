@@ -89,6 +89,11 @@ func (b *Bridge) TriggerSync(ctx context.Context) error {
 		return err
 	}
 
+	b.mux.HandleFunc("/ping", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("pong"))
+	})
+
 	sv := &http.Server{
 		Handler: b.mux,
 		Addr:    b.triggerCfg.Listen,

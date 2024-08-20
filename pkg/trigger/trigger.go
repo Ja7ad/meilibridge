@@ -65,7 +65,12 @@ func (t *Trigger) Trigger(ctx context.Context, bridge string, req *types.Trigger
 }
 
 func (t *Trigger) health() error {
-	r, err := http.NewRequest(http.MethodGet, t.host, http.NoBody)
+	u, err := url.JoinPath(t.host, "ping")
+	if err != nil {
+		return err
+	}
+
+	r, err := http.NewRequest(http.MethodGet, u, http.NoBody)
 	if err != nil {
 		return err
 	}

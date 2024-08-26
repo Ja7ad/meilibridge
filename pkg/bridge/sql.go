@@ -116,7 +116,7 @@ func (s *sql) bulkWorker(ctx context.Context,
 					s.log.Fatal("failed to recreate index", "err", err)
 				}
 			} else {
-				if !s.meili.IsExistsIndex(t.des.IndexName) {
+				if !s.meili.IsExistsIndex(ctx, t.des.IndexName) {
 					s.log.Fatal(fmt.Sprintf("index %s does not exist for resync", t.des.IndexName))
 				}
 			}
@@ -170,7 +170,7 @@ func (s *sql) processTrigger(ctx context.Context, item types.TriggerRequestBody)
 		return false, fmt.Errorf("invalid index UID %s", item.IndexUID)
 	}
 
-	if !s.meili.IsExistsIndex(idx.IndexName) {
+	if !s.meili.IsExistsIndex(ctx, idx.IndexName) {
 		if err := recreateIndex(ctx, idx.IndexName, idx.PrimaryKey, idx.Settings, s.meili); err != nil {
 			return true, err
 		}

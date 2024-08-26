@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"time"
-
 	"github.com/Ja7ad/meilibridge/config"
 	"github.com/Ja7ad/meilibridge/pkg/logger"
+	"time"
+
 	meili "github.com/meilisearch/meilisearch-go"
 )
 
@@ -15,37 +15,27 @@ const _defaultWaitInterval = 5 * time.Second
 
 type meilisearch struct {
 	apiURL, apiKey string
-	cli            *meili.Client
+	cli            meili.ServiceManager
 	isHealthy      bool
 	log            logger.Logger
 }
 
 type Meilisearch interface {
 	CreateIndex(ctx context.Context, uid, primaryKey string) error
-	Index(uid string) *meili.Index
-	GetIndex(uid string) (*meili.Index, error)
-	IsExistsIndex(uid string) bool
+	Index(uid string) meili.IndexManager
+	GetIndex(ctx context.Context, uid string) (meili.IndexManager, error)
+	IsExistsIndex(ctx context.Context, uid string) bool
 	DeleteIndex(ctx context.Context, uid string) error
 	UpdateIndexSettings(ctx context.Context, uid string, settings *config.Settings) error
 	WaitForTask(ctx context.Context, task *meili.TaskInfo) error
-	Stats() *meili.Stats
+	Stats(ctx context.Context) *meili.Stats
+	IndexStats(ctx context.Context, indexUID string) *meili.StatsIndex
 	Version() string
 }
 
 func New(ctx context.Context, apiURL, apiKey string, log logger.Logger) (Meilisearch, error) {
-	cli := meili.NewClient(meili.ClientConfig{
-		Host:   apiURL,
-		APIKey: apiKey,
-	})
-
-	m := &meilisearch{
-		log:       log,
-		apiURL:    apiURL,
-		apiKey:    apiKey,
-		isHealthy: true,
-	}
-
-	if !cli.IsHealthy() {
+	cli, err := meili.Connect(apiURL, meili.WithAPIKey(apiKey))
+	if err != nil {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
@@ -58,6 +48,13 @@ func New(ctx context.Context, apiURL, apiKey string, log logger.Logger) (Meilise
 		}
 	}
 
+	m := &meilisearch{
+		log:       log,
+		apiURL:    apiURL,
+		apiKey:    apiKey,
+		isHealthy: true,
+	}
+
 	m.cli = cli
 
 	go m.healthyCheck(ctx)
@@ -65,16 +62,16 @@ func New(ctx context.Context, apiURL, apiKey string, log logger.Logger) (Meilise
 	return m, nil
 }
 
-func (m *meilisearch) Index(uid string) *meili.Index {
+func (m *meilisearch) Index(uid string) meili.IndexManager {
 	return m.cli.Index(uid)
 }
 
-func (m *meilisearch) GetIndex(uid string) (*meili.Index, error) {
+func (m *meilisearch) GetIndex(ctx context.Context, uid string) (meili.IndexManager, error) {
 	if !m.isHealthy {
 		return nil, ErrMeilisearchIsUnhealthy
 	}
 
-	idx, err := m.cli.GetIndex(uid)
+	idx, err := m.cli.GetIndexWithContext(ctx, uid)
 	if err != nil {
 		return nil, ErrIndexNotFound
 	}
@@ -95,7 +92,7 @@ func (m *meilisearch) CreateIndex(ctx context.Context, uid, primaryKey string) e
 		idxCfg.PrimaryKey = primaryKey
 	}
 
-	t, err := m.cli.CreateIndex(idxCfg)
+	t, err := m.cli.CreateIndexWithContext(ctx, idxCfg)
 	if err != nil {
 		return err
 	}
@@ -103,8 +100,8 @@ func (m *meilisearch) CreateIndex(ctx context.Context, uid, primaryKey string) e
 	return m.WaitForTask(ctx, t)
 }
 
-func (m *meilisearch) IsExistsIndex(uid string) bool {
-	_, err := m.cli.GetIndex(uid)
+func (m *meilisearch) IsExistsIndex(ctx context.Context, uid string) bool {
+	_, err := m.cli.GetIndexWithContext(ctx, uid)
 	return err == nil
 }
 
@@ -113,7 +110,7 @@ func (m *meilisearch) DeleteIndex(ctx context.Context, uid string) error {
 		return ErrMeilisearchIsUnhealthy
 	}
 
-	t, err := m.cli.DeleteIndex(uid)
+	t, err := m.cli.DeleteIndexWithContext(ctx, uid)
 	if err != nil {
 		return err
 	}
@@ -122,7 +119,7 @@ func (m *meilisearch) DeleteIndex(ctx context.Context, uid string) error {
 }
 
 func (m *meilisearch) UpdateIndexSettings(ctx context.Context, uid string, settings *config.Settings) error {
-	idx, err := m.cli.GetIndex(uid)
+	idx, err := m.cli.GetIndexWithContext(ctx, uid)
 	if err != nil {
 		return ErrIndexNotFound
 	}
@@ -131,7 +128,18 @@ func (m *meilisearch) UpdateIndexSettings(ctx context.Context, uid string, setti
 		return nil
 	}
 
-	resT, err := idx.ResetSettings()
+	meiliSettings := new(meili.Settings)
+
+	b, err := json.Marshal(settings)
+	if err != nil {
+		return err
+	}
+
+	if err := json.Unmarshal(b, meiliSettings); err != nil {
+		return err
+	}
+
+	resT, err := idx.ResetSettingsWithContext(ctx)
 	if err != nil {
 		return err
 	}
@@ -140,18 +148,7 @@ func (m *meilisearch) UpdateIndexSettings(ctx context.Context, uid string, setti
 		return err
 	}
 
-	var s meili.Settings
-
-	b, err := json.Marshal(settings)
-	if err != nil {
-		return err
-	}
-
-	if err := json.Unmarshal(b, &s); err != nil {
-		return err
-	}
-
-	t, err := idx.UpdateSettings(&s)
+	t, err := idx.UpdateSettingsWithContext(ctx, meiliSettings)
 	if err != nil {
 		return ErrUpdateSettings
 	}
@@ -159,13 +156,13 @@ func (m *meilisearch) UpdateIndexSettings(ctx context.Context, uid string, setti
 	return m.WaitForTask(ctx, t)
 }
 
-func (m *meilisearch) Stats() *meili.Stats {
+func (m *meilisearch) Stats(ctx context.Context) *meili.Stats {
 	if !m.isHealthy {
 		m.log.Warn("meilisearch is unhealthy")
 		return nil
 	}
 
-	s, err := m.cli.GetStats()
+	s, err := m.cli.GetStatsWithContext(ctx)
 	if err != nil {
 		m.log.Error("failed to get meilisearch stats", "err", err)
 		return nil
@@ -188,6 +185,15 @@ func (m *meilisearch) Version() string {
 	return ""
 }
 
+func (m *meilisearch) IndexStats(ctx context.Context, indexUID string) *meili.StatsIndex {
+	s, err := m.cli.Index(indexUID).GetStatsWithContext(ctx)
+	if err != nil {
+		m.log.Error("failed to get meilisearch stats", "err", err)
+		return nil
+	}
+	return s
+}
+
 func (m *meilisearch) WaitForTask(
 	ctx context.Context,
 	task *meili.TaskInfo,
@@ -196,10 +202,7 @@ func (m *meilisearch) WaitForTask(
 		return nil
 	}
 
-	t, err := m.cli.WaitForTask(task.TaskUID, meili.WaitParams{
-		Context:  ctx,
-		Interval: _defaultWaitInterval,
-	})
+	t, err := m.cli.WaitForTaskWithContext(ctx, task.TaskUID, _defaultWaitInterval)
 	if err != nil {
 		return err
 	}
@@ -212,7 +215,7 @@ func (m *meilisearch) WaitForTask(
 	case meili.TaskStatusCanceled:
 		return ErrTaskCanceled
 	case meili.TaskStatusFailed:
-		return fmt.Errorf("task %d index %s failed, error %s", t.TaskUID, t.IndexUID, t.Error.Message)
+		return fmt.Errorf("task %v index %s failed, error %s", t.Type, t.IndexUID, t.Error.Message)
 	case meili.TaskStatusUnknown:
 		return ErrTaskUnknown
 	}

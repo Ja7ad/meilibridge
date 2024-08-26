@@ -47,7 +47,7 @@ func recreateIndex(
 	set *config.Settings,
 	meili meilisearch.Meilisearch,
 ) error {
-	if meili.IsExistsIndex(indexName) {
+	if meili.IsExistsIndex(ctx, indexName) {
 		if err := meili.DeleteIndex(ctx, indexName); err != nil {
 			return err
 		}
@@ -134,7 +134,7 @@ func indexConfigByUID(uid string, indexMap map[config.Collection]*config.IndexCo
 func processTrigger(
 	ctx context.Context,
 	waitFunc func(ctx context.Context, t *meili.TaskInfo) error,
-	idx *meili.Index,
+	idx meili.IndexManager,
 	triggerType types.TriggerOpType,
 	document database.Result,
 	primaryValue string,
@@ -142,7 +142,7 @@ func processTrigger(
 
 	switch triggerType {
 	case types.INSERT, types.UPDATE:
-		task, err := idx.UpdateDocuments(document)
+		task, err := idx.UpdateDocumentsWithContext(ctx, document)
 		if err != nil {
 			return err
 		}

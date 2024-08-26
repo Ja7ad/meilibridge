@@ -116,7 +116,7 @@ func (m *mongo) onDemandWorker(ctx context.Context, wg *sync.WaitGroup, taskCh <
 func (m *mongo) handleTask(ctx context.Context, t task) error {
 	hasView, col, view := m.prepareCollections(t)
 
-	if !m.meili.IsExistsIndex(t.des.IndexName) {
+	if !m.meili.IsExistsIndex(ctx, t.des.IndexName) {
 		if err := recreateIndex(ctx, t.des.IndexName, t.des.PrimaryKey, t.des.Settings, m.meili); err != nil {
 			return err
 		}
@@ -160,7 +160,7 @@ func (m *mongo) prepareCollections(t task) (bool, string, string) {
 
 func (m *mongo) handleWatchEvent(
 	ctx context.Context,
-	idx *meili.Index,
+	idx meili.IndexManager,
 	t task,
 	w func() (database.WatcherType, database.WatchResult),
 	hasView bool,
@@ -184,7 +184,7 @@ func (m *mongo) handleWatchEvent(
 
 func (m *mongo) handleInsert(
 	ctx context.Context,
-	idx *meili.Index,
+	idx meili.IndexManager,
 	t task,
 	res database.WatchResult,
 	hasView bool,
@@ -219,7 +219,7 @@ func (m *mongo) handleInsert(
 
 func (m *mongo) handleUpdate(
 	ctx context.Context,
-	idx *meili.Index,
+	idx meili.IndexManager,
 	t task,
 	res database.WatchResult,
 	view string,
@@ -275,7 +275,7 @@ func (m *mongo) handleUpdate(
 
 func (m *mongo) handleReplace(
 	ctx context.Context,
-	idx *meili.Index,
+	idx meili.IndexManager,
 	t task,
 	res database.WatchResult,
 	hasView bool,
@@ -305,7 +305,7 @@ func (m *mongo) handleReplace(
 	}
 }
 
-func (m *mongo) handleDelete(ctx context.Context, idx *meili.Index, t task, res database.WatchResult) {
+func (m *mongo) handleDelete(ctx context.Context, idx meili.IndexManager, t task, res database.WatchResult) {
 	m.log.InfoContext(ctx, fmt.Sprintf("remove document %s", res.DocumentId.Hex()),
 		"collection", t.col, "index", t.des.IndexName)
 	id := res.DocumentId.Hex()
@@ -360,7 +360,7 @@ func (m *mongo) bulkWorker(ctx context.Context,
 					m.log.Fatal("failed to recreate index", "err", err)
 				}
 			} else {
-				if !m.meili.IsExistsIndex(t.des.IndexName) {
+				if !m.meili.IsExistsIndex(ctx, t.des.IndexName) {
 					m.log.Fatal(fmt.Sprintf("index %s does not exist for resync", t.des.IndexName))
 				}
 			}
@@ -414,7 +414,7 @@ func (m *mongo) processTrigger(ctx context.Context, item types.TriggerRequestBod
 		return false, fmt.Errorf("invalid index UID %s", item.IndexUID)
 	}
 
-	if !m.meili.IsExistsIndex(idx.IndexName) {
+	if !m.meili.IsExistsIndex(ctx, idx.IndexName) {
 		if err := recreateIndex(ctx, idx.IndexName, idx.PrimaryKey, idx.Settings, m.meili); err != nil {
 			return true, err
 		}
